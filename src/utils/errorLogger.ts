@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import * as Sentry from '@sentry/react';
 
 // نظام تسجيل الأخطاء
 export interface ErrorLog {

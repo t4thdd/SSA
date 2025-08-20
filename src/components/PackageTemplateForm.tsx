@@ -4,7 +4,6 @@ import { type PackageTemplate, type PackageItem, mockOrganizations } from '../da
 import { useErrorLogger } from '../utils/errorLogger';
 import { Button, Card, Input, FormField, ConfirmationModal } from './ui';
 import { useFormValidation } from '../hooks/useFormValidation';
-
 interface PackageTemplateFormProps {
   template?: PackageTemplate | null;
   onSave: (data: Partial<PackageTemplate>) => void;

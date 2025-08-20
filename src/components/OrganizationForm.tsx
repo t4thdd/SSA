@@ -4,7 +4,6 @@ import { type Organization } from '../data/mockData';
 import { useErrorLogger } from '../utils/errorLogger';
 import { Button, Card, Input, FormField, ConfirmationModal } from './ui';
 import { useFormValidation, commonValidationRules } from '../hooks/useFormValidation';
-import * as Sentry from '@sentry/react';
 
 interface OrganizationFormProps {
   organization?: Organization | null;

@@ -58,7 +58,6 @@ class ExportService {
         csvContent += values.join(',') + '\n';
       });
 
-      Sentry.captureException(new Error(errorMessage));
       const filename = options.filename || `تصدير_${new Date().toISOString().split('T')[0]}.csv`;
       const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);

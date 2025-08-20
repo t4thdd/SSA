@@ -179,11 +179,6 @@ export default function MessagesSettingsPage() {
   };
 
   const handleAddTemplate = () => {
-    Sentry.addBreadcrumb({
-      message: 'Adding new message template',
-      category: 'template',
-      level: 'info'
-    });
     setModalType('add-template');
     setSelectedItem(null);
     setShowModal(true);
