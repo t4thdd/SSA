@@ -621,26 +621,25 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 rows={3}
               />
             </div>
-        title="تأكيد إرسال طلب التوزيع الفردي"
+          </div>
         </Card>
       )}
 
       {/* Send Summary */}
-          <h3 className="text-xl font-bold text-gray-900 mb-4">هل أنت متأكد من إرسال طلب التوزيع؟</h3>
+      {reason && (
         <Card>
-            سيتم إرسال طلب التوزيع إلى الأدمن للمراجعة والموافقة.
-
           <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl border border-green-200 mb-6">
+            <h4 className="font-semibold text-gray-900 mb-3">تفاصيل الطلب</h4>
             <div className="grid md:grid-cols-4 gap-4">
               <div className="text-center">
-            <h4 className="font-semibold text-gray-900 mb-3">تفاصيل الطلب</h4>
+                <div className="bg-blue-100 p-3 rounded-xl mb-2">
                   <User className="w-6 h-6 text-blue-600 mx-auto" />
                 </div>
                 <p className="text-sm text-gray-600">المستفيد</p>
-                <p className="font-bold text-gray-900">{selectedBeneficiary.name}</p>
+                <p className="font-bold text-gray-900">{selectedBeneficiary?.name}</p>
               </div>
 
-                <span className="text-gray-600">قالب الطرد:</span>
+              <div className="text-center">
                 <div className="bg-green-100 p-3 rounded-xl mb-2">
                   <Package className="w-6 h-6 text-green-600 mx-auto" />
                 </div>
@@ -660,7 +659,7 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 <div className="bg-orange-100 p-3 rounded-xl mb-2">
                   <Star className="w-6 h-6 text-orange-600 mx-auto" />
                 </div>
-                <span className="text-gray-600">التكلفة المقدرة:</span>
+                <p className="text-sm text-gray-600">التكلفة المقدرة</p>
                 <p className="font-bold text-gray-900">{selectedTemplateData?.estimatedCost} ₪</p>
               </div>
             </div>
@@ -734,8 +733,8 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 <li className="flex items-start space-x-2 space-x-reverse">
                   <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                   <span>سيتم تعيين أفضل مندوب متاح حسب المنطقة</span>
-            <Button variant="primary" onClick={executeCreateRequest}>
-              إرسال الطلب
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -795,7 +794,7 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
               <Button variant="secondary" onClick={() => setShowConfirmSendModal(false)}>
                 إلغاء
               </Button>
-              <Button variant="primary" onClick={executeSendPackage}>
+              <Button variant="primary" onClick={executeCreateRequest}>
                 تأكيد الإرسال
               </Button>
             </div>
@@ -919,25 +918,25 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 <span className="font-medium">الحلول المقترحة:</span>
               </div>
               <ul className="text-sm text-blue-700 space-y-1 text-right">
-          <span>سيتم إرسال الطلب إلى الأدمن للمراجعة والموافقة</span>
+                <li>• تأكد من اتصالك بالإنترنت</li>
                 <li>• تأكد من صحة عنوان المستفيد</li>
                 <li>• حاول مرة أخرى خلال ساعة</li>
                 <li>• تواصل مع فريق الدعم إذا استمرت المشكلة</li>
-          <span>الأدمن سيختار المندوب المناسب للمنطقة</span>
+              </ul>
             </div>
 
             <div className="flex space-x-3 space-x-reverse justify-center">
               <Button variant="secondary" onClick={() => setShowErrorModal(false)}>
                 إغلاق
-          <span>ستتلقى إشعاراً عند الموافقة أو الرفض</span>
+              </Button>
               <Button variant="primary" onClick={() => {
                 setShowErrorModal(false);
                 handleSendPackage();
-          <span>يمكن تتبع حالة الطلب من لوحة التحكم</span>
+              }}>
                 محاولة مرة أخرى
               </Button>
             </div>
-          <span>الطلبات العاجلة لها أولوية في المعالجة</span>
+          </div>
         </Modal>
       )}
     </div>
