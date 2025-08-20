@@ -92,7 +92,6 @@ export default function DistributionRequestReview({
       
       logInfo(`تمت الموافقة على طلب التوزيع: ${request.id}`, 'DistributionRequestReview');
     } catch (error) {
-      Sentry.captureException(error);
       logError(error as Error, 'DistributionRequestReview');
     } finally {
       setIsProcessing(false);

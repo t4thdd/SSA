@@ -203,11 +203,6 @@ export default function MessagesSettingsPage() {
 
   const handleDeleteTemplate = (template: MessageTemplate) => {
     if (confirm(`هل أنت متأكد من حذف القالب "${template.name}"؟`)) {
-      Sentry.addBreadcrumb({
-        message: 'Deleting message template',
-        category: 'template',
-        data: { templateId: template.id, templateName: template.name }
-      });
       setMessageTemplates(prev => prev.filter(t => t.id !== template.id));
       setNotification({ message: `تم حذف القالب "${template.name}"`, type: 'warning' });
       setTimeout(() => setNotification(null), 3000);
