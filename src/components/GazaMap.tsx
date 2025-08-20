@@ -27,6 +27,8 @@ interface GazaMapProps {
   onPointClick: (beneficiary: Beneficiary) => void;
   activeFilter?: string;
   className?: string;
+  heightClass?: string;
+  containerStyle?: React.CSSProperties;
 }
 
 // Custom marker icons for different statuses
@@ -67,6 +69,14 @@ const getStatusText = (status: string) => {
 };
 
 export default function GazaMap({ points, onPointClick, activeFilter = 'all', className = '' }: GazaMapProps) {
+export default function GazaMap({ 
+  points, 
+  onPointClick, 
+  activeFilter = 'all', 
+  className = '', 
+  heightClass = 'h-96',
+  containerStyle = {}
+}: GazaMapProps) {
   const [map, setMap] = useState<L.Map | null>(null);
 
   // Gaza Strip coordinates - center point
@@ -111,12 +121,12 @@ export default function GazaMap({ points, onPointClick, activeFilter = 'all', cl
   }, []);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className} ${heightClass}`} style={containerStyle}>
       <MapContainer
         center={gazaCenter}
         zoom={11}
-       className="z-0"
-        style={{ height: '500px', width: '100%', borderRadius: '12px' }}
+        className="z-0 w-full h-full"
+        style={{ borderRadius: '12px', minHeight: '300px' }}
         maxBounds={gazaBounds}
         maxBoundsViscosity={1.0}
         ref={setMap}
@@ -171,7 +181,7 @@ export default function GazaMap({ points, onPointClick, activeFilter = 'all', cl
       </MapContainer>
 
       {/* Map Legend */}
-      <div className="absolute bottom-4 right-4 bg-white rounded-xl p-4 shadow-lg border border-gray-200 z-10">
+      <div className="absolute bottom-4 right-4 bg-white rounded-xl p-3 shadow-lg border border-gray-200 z-[1000] max-w-[200px]">
         <h4 className="font-medium text-gray-900 mb-3 text-sm">مفتاح الخريطة</h4>
         <div className="space-y-2">
           <div className="flex items-center space-x-2 space-x-reverse text-xs">
@@ -194,13 +204,13 @@ export default function GazaMap({ points, onPointClick, activeFilter = 'all', cl
       </div>
 
       {/* Map Controls */}
-      <div className="absolute top-4 left-4 z-10 space-y-2">
+      <div className="absolute top-4 left-4 z-[1000] space-y-2">
         <button
           onClick={() => map?.setView(gazaCenter, 11)}
-          className="bg-white p-3 rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="bg-white p-2 rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
           title="العودة لمركز غزة"
         >
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
