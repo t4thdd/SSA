@@ -69,6 +69,7 @@ const getStatusText = (status: string) => {
 };
 
 export default function GazaMap({ points, onPointClick, activeFilter = 'all', className = '' }: GazaMapProps) {
+}
 export default function GazaMap({ 
   points, 
   onPointClick, 
