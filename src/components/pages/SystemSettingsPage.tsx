@@ -768,8 +768,47 @@ export default function SystemSettingsPage() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        alert(`تم اختيار الملف: ${file.name}\nسيتم تطوير وظيفة الاستيراد لاحقاً`);
-                        setShowModal(false);
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          try {
+                            const importedData = JSON.parse(event.target?.result as string);
+                            
+                            if (importedData.settings && Array.isArray(importedData.settings)) {
+                              // تحديث الإعدادات من الملف المستورد
+                              const updatedSettings = systemSettings.map(setting => {
+                                const importedSetting = importedData.settings.find((s: any) => s.key === setting.key);
+                                if (importedSetting && !setting.isSecret) {
+                                  return {
+                                    ...setting,
+                                    value: importedSetting.value,
+                                    lastModified: new Date().toISOString().split('T')[0],
+                                    modifiedBy: 'مستورد من ملف'
+                                  };
+                                }
+                                return setting;
+                              });
+                              
+                              setSystemSettings(updatedSettings);
+                              setNotification({ 
+                                message: `تم استيراد ${importedData.settings.length} إعداد بنجاح من ${file.name}`, 
+                                type: 'success' 
+                              });
+                              setTimeout(() => setNotification(null), 5000);
+                              setShowModal(false);
+                              logInfo(`تم استيراد الإعدادات من ${file.name}`, 'SystemSettingsPage');
+                            } else {
+                              throw new Error('تنسيق الملف غير صحيح');
+                            }
+                          } catch (error) {
+                            setNotification({ 
+                              message: 'فشل في استيراد الملف. تأكد من أن الملف بتنسيق JSON صحيح', 
+                              type: 'error' 
+                            });
+                            setTimeout(() => setNotification(null), 5000);
+                            logError(error as Error, 'SystemSettingsPage');
+                          }
+                        };
+                        reader.readAsText(file);
                       }
                     }}
                   />
@@ -782,6 +821,15 @@ export default function SystemSettingsPage() {
                   </label>
                 </div>
 
+                <div className="bg-blue-50 p-4 rounded-lg mb-6 text-right">
+                  <h5 className="font-medium text-blue-800 mb-2">متطلبات الملف:</h5>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• يجب أن يكون الملف بصيغة JSON</li>
+                    <li>• يجب أن يحتوي على مصفوفة "settings"</li>
+                    <li>• الإعدادات السرية لن يتم استيرادها لأسباب أمنية</li>
+                    <li>• سيتم تحديث الإعدادات الموجودة فقط</li>
+                  </ul>
+                </div>
                 <div className="flex space-x-3 space-x-reverse justify-center">
                   <Button variant="secondary" onClick={() => setShowModal(false)}>
                     إلغاء

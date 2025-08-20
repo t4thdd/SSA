@@ -895,11 +895,49 @@ export default function CouriersManagementPage() {
                         </p>
                       </div>
                       
-                      <div className="bg-gray-50 rounded-lg h-48 flex items-center justify-center">
-                        <div className="text-center">
-                          <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600">خريطة تفاعلية</p>
-                          <p className="text-xs text-gray-500">سيتم تطوير الخريطة التفاعلية هنا</p>
+                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="bg-gray-50 p-3 border-b border-gray-200">
+                          <h5 className="font-medium text-gray-900">خريطة الموقع المباشر</h5>
+                        </div>
+                        <div className="p-4">
+                          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                            <div className="flex items-center space-x-2 space-x-reverse mb-3">
+                              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-green-700 font-medium">المندوب متصل ومتاح</span>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-green-600">آخر تحديث:</span>
+                                <span className="font-medium text-green-800 mr-2">منذ دقيقتين</span>
+                              </div>
+                              <div>
+                                <span className="text-green-600">دقة الموقع:</span>
+                                <span className="font-medium text-green-800 mr-2">عالية (±5 متر)</span>
+                              </div>
+                              <div>
+                                <span className="text-green-600">السرعة:</span>
+                                <span className="font-medium text-green-800 mr-2">15 كم/ساعة</span>
+                              </div>
+                              <div>
+                                <span className="text-green-600">الاتجاه:</span>
+                                <span className="font-medium text-green-800 mr-2">شمال شرق</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                            <h6 className="font-medium text-blue-800 mb-2">المهام القريبة</h6>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-blue-700">مهمة #TK-001</span>
+                                <span className="text-blue-900 font-medium">0.8 كم</span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-blue-700">مهمة #TK-003</span>
+                                <span className="text-blue-900 font-medium">1.2 كم</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -933,17 +971,80 @@ export default function CouriersManagementPage() {
                   </p>
                 </div>
 
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-600">نموذج تعيين المهام</p>
-                  <p className="text-sm text-gray-500">سيتم تطوير واجهة تعيين المهام هنا</p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">اختيار المهمة</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="">اختر مهمة متاحة</option>
+                      <option value="task-1">تسليم طرد غذائي - أحمد محمد (خان يونس)</option>
+                      <option value="task-2">تسليم طرد طبي - فاطمة أحمد (غزة)</option>
+                      <option value="task-3">تسليم طرد ملابس - خالد سالم (رفح)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">أولوية المهمة</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="normal">عادية</option>
+                      <option value="high">عالية</option>
+                      <option value="urgent">عاجلة</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">موعد التسليم المطلوب</label>
+                    <input
+                      type="datetime-local"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      defaultValue={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات للمندوب</label>
+                    <textarea
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={3}
+                      placeholder="تعليمات خاصة أو ملاحظات مهمة للمندوب..."
+                    />
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h5 className="font-medium text-blue-800 mb-2">معلومات المندوب:</h5>
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-blue-700">التقييم:</span>
+                        <span className="font-medium text-blue-900 mr-2">{selectedCourier.rating}/5</span>
+                      </div>
+                      <div>
+                        <span className="text-blue-700">المهام المكتملة:</span>
+                        <span className="font-medium text-blue-900 mr-2">{selectedCourier.completedTasks}</span>
+                      </div>
+                      <div>
+                        <span className="text-blue-700">الحالة:</span>
+                        <Badge variant={selectedCourier.status === 'active' ? 'success' : 'warning'} size="sm" className="mr-2">
+                          {selectedCourier.status === 'active' ? 'نشط' : selectedCourier.status === 'busy' ? 'مشغول' : 'غير متصل'}
+                        </Badge>
+                      </div>
+                      <div>
+                        <span className="text-blue-700">معتمد إنسانياً:</span>
+                        <Badge variant={selectedCourier.isHumanitarianApproved ? 'success' : 'error'} size="sm" className="mr-2">
+                          {selectedCourier.isHumanitarianApproved ? 'معتمد' : 'غير معتمد'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex space-x-3 space-x-reverse justify-end pt-4">
                   <Button variant="secondary" onClick={() => setShowModal(false)}>
                     إلغاء
                   </Button>
-                  <Button variant="primary">
+                  <Button variant="primary" onClick={() => {
+                    setNotification({ message: `تم تعيين مهمة جديدة للمندوب ${selectedCourier.name}`, type: 'success' });
+                    setTimeout(() => setNotification(null), 3000);
+                    setShowModal(false);
+                  }}>
                     تعيين المهمة
                   </Button>
                 </div>

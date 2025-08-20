@@ -1,4 +1,3 @@
-```javascript
 import React, { useState } from 'react';
 import { MessageSquare, Mail, Phone, Bell, Settings, Save, RefreshCw, Plus, Edit, Trash2, Eye, Send, CheckCircle, AlertTriangle, Clock, Users, Package, Download, Upload, X, Star, Activity, Shield, Database } from 'lucide-react';
 import { useErrorLogger } from '../../utils/errorLogger';
@@ -994,4 +993,3 @@ export default function MessagesSettingsPage() {
     </div>
   );
 }
-```
