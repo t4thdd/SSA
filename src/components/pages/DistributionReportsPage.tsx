@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart3, Download, Calendar, Filter, TrendingUp, Users, Package, CheckCircle, Clock, AlertTriangle, Star, Award, MapPin, Activity, PieChart, LineChart, Truck } from 'lucide-react';
 import { mockTasks, mockBeneficiaries, mockPackages, mockCouriers, calculateStats } from '../../data/mockData';
+import GazaMap, { type MapPoint } from '../GazaMap';
 
 export default function DistributionReportsPage() {
   const [dateRange, setDateRange] = useState('month');
@@ -8,6 +9,7 @@ export default function DistributionReportsPage() {
   const [selectedRegion, setSelectedRegion] = useState('all');
 
   const stats = calculateStats();
+  const [selectedMapBeneficiary, setSelectedMapBeneficiary] = useState<any>(null);
 
   const reportTypes = [
     { id: 'overview', name: 'نظرة عامة', icon: BarChart3 },
@@ -81,6 +83,39 @@ export default function DistributionReportsPage() {
 
   const getRegionData = (regionId: string) => {
     return regions.find(r => r.id === regionId) || regions[0];
+  };
+
+  // تحويل بيانات التوزيع إلى نقاط خريطة
+  const convertDistributionToMapPoints = (): MapPoint[] => {
+    return mockBeneficiaries.map(beneficiary => {
+      // تحديد حالة التوزيع بناءً على آخر استلام
+      const lastReceived = new Date(beneficiary.lastReceived);
+      const daysSinceLastReceived = Math.floor((Date.now() - lastReceived.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let status: 'delivered' | 'problem' | 'rescheduled' | 'pending' = 'delivered';
+      
+      if (daysSinceLastReceived > 30) {
+        status = 'problem'; // لم يستلم لأكثر من شهر
+      } else if (daysSinceLastReceived > 14) {
+        status = 'rescheduled'; // متأخر
+      } else if (daysSinceLastReceived > 7) {
+        status = 'pending'; // يحتاج متابعة
+      }
+
+      return {
+        id: beneficiary.id,
+        lat: beneficiary.location.lat,
+        lng: beneficiary.location.lng,
+        status,
+        title: beneficiary.name,
+        description: `آخر استلام: ${daysSinceLastReceived} يوم - ${beneficiary.detailedAddress.district}`,
+        data: beneficiary
+      };
+    });
+  };
+
+  const handleMapPointClick = (beneficiary: any) => {
+    setSelectedMapBeneficiary(beneficiary);
   };
 
   return (
@@ -212,9 +247,38 @@ export default function DistributionReportsPage() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Geographic Distribution Map */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <MapPin className="w-6 h-6 ml-2 text-green-600" />
+                التوزيع الجغرافي
+              </h3>
+              <div className="text-sm text-gray-600">خريطة تفاعلية</div>
+            </div>
+            
+            <GazaMap 
+              points={convertDistributionToMapPoints()}
+              onPointClick={handleMapPointClick}
+              activeFilter={selectedRegion === 'all' ? 'all' : 'delivered'}
+              className="h-80 rounded-lg"
+            />
+            
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                إجمالي النقاط: {convertDistributionToMapPoints().length}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                انقر على أي نقطة لعرض تفاصيل المستفيد
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Monthly Trends Chart */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div className="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center">
               <LineChart className="w-6 h-6 ml-2 text-blue-600" />
@@ -266,7 +330,7 @@ export default function DistributionReportsPage() {
         </div>
 
         {/* Package Types Distribution */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div className="lg:col-span-1 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center">
               <PieChart className="w-6 h-6 ml-2 text-purple-600" />
@@ -619,6 +683,78 @@ export default function DistributionReportsPage() {
           </div>
         </div>
       </div>
+
+      {/* Map Point Details Modal */}
+      {selectedMapBeneficiary && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">تفاصيل المستفيد من الخريطة</h3>
+              <button 
+                onClick={() => setSelectedMapBeneficiary(null)}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                <h4 className="font-semibold text-green-800 mb-3">معلومات التوزيع</h4>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-green-700">الاسم:</span>
+                    <span className="font-medium text-green-900 mr-2">{selectedMapBeneficiary.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-green-700">المنطقة:</span>
+                    <span className="font-medium text-green-900 mr-2">{selectedMapBeneficiary.detailedAddress.district}</span>
+                  </div>
+                  <div>
+                    <span className="text-green-700">إجمالي الطرود:</span>
+                    <span className="font-medium text-green-900 mr-2">{selectedMapBeneficiary.totalPackages}</span>
+                  </div>
+                  <div>
+                    <span className="text-green-700">آخر استلام:</span>
+                    <span className="font-medium text-green-900 mr-2">
+                      {new Date(selectedMapBeneficiary.lastReceived).toLocaleDateString('ar-SA')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-green-700">الحالة:</span>
+                    <span className="font-medium text-green-900 mr-2">
+                      {selectedMapBeneficiary.status === 'active' ? 'نشط' :
+                       selectedMapBeneficiary.status === 'pending' ? 'معلق' : 'موقوف'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-green-700">الهاتف:</span>
+                    <span className="font-medium text-green-900 mr-2">{selectedMapBeneficiary.phone}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 space-x-reverse justify-end">
+                <button 
+                  onClick={() => setSelectedMapBeneficiary(null)}
+                  className="px-6 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  إغلاق
+                </button>
+                <button 
+                  onClick={() => {
+                    alert(`سيتم فتح ملف المستفيد: ${selectedMapBeneficiary.name}`);
+                    setSelectedMapBeneficiary(null);
+                  }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  عرض الملف الكامل
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

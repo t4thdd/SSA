@@ -830,6 +830,13 @@ export default function SystemSettingsPage() {
                     <li>• سيتم تحديث الإعدادات الموجودة فقط</li>
                   </ul>
                 </div>
+                
+                {/* Import Results */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-gray-800 mb-2">حالة الاستيراد:</h5>
+                  <p className="text-sm text-gray-600">جاهز لاستقبال ملف الإعدادات</p>
+                </div>
+
                 <div className="flex space-x-3 space-x-reverse justify-center">
                   <Button variant="secondary" onClick={() => setShowModal(false)}>
                     إلغاء

@@ -10,6 +10,7 @@ import {
 } from '../../data/mockData';
 import { useErrorLogger } from '../../utils/errorLogger';
 import { Button, Card, Input, Badge, Modal } from '../ui';
+import GazaMap, { type MapPoint } from '../GazaMap';
 
 interface CourierFormData {
   name: string;
@@ -43,6 +44,23 @@ export default function CouriersManagementPage() {
     email: '',
     status: 'active',
     isHumanitarianApproved: false
+  });
+
+  const [assignForm, setAssignForm] = useState({
+    taskId: '',
+    priority: 'normal',
+    scheduledAt: '',
+    notes: ''
+  });
+
+  const [trackingData, setTrackingData] = useState<{
+    courier: Courier | null;
+    mapPoints: MapPoint[];
+    nearbyTasks: Task[];
+  }>({
+    courier: null,
+    mapPoints: [],
+    nearbyTasks: []
   });
 
   // فلترة المندوبين
@@ -118,8 +136,73 @@ export default function CouriersManagementPage() {
   };
 
   const handleTrackLocation = (courier: Courier) => {
-    setModalType('track-location');
+    // تجهيز بيانات التتبع للمندوب
+    const courierTasks = tasks.filter(t => t.courierId === courier.id);
+    const taskBeneficiaries = courierTasks.map(task => 
+      beneficiaries.find(b => b.id === task.beneficiaryId)
+    ).filter(Boolean) as Beneficiary[];
+
+    // إنشاء نقاط الخريطة
+    const mapPoints: MapPoint[] = [];
+    
+    // إضافة موقع المندوب
+    if (courier.currentLocation) {
+      mapPoints.push({
+        id: `courier-${courier.id}`,
+        lat: courier.currentLocation.lat,
+        lng: courier.currentLocation.lng,
+        status: courier.status === 'active' ? 'delivered' : 
+                courier.status === 'busy' ? 'rescheduled' : 'problem',
+        title: `المندوب: ${courier.name}`,
+        description: `الحالة: ${courier.status === 'active' ? 'نشط' : 
+                     courier.status === 'busy' ? 'مشغول' : 'غير متصل'}`,
+        data: courier
+      });
+    }
+
+    // إضافة مواقع المستفيدين المرتبطين بمهام المندوب
+    taskBeneficiaries.forEach(beneficiary => {
+      const task = courierTasks.find(t => t.beneficiaryId === beneficiary.id);
+      if (task && beneficiary.location) {
+        const taskStatus = task.status === 'delivered' ? 'delivered' :
+                          task.status === 'failed' ? 'problem' :
+                          task.status === 'rescheduled' ? 'rescheduled' : 'pending';
+
+        mapPoints.push({
+          id: beneficiary.id,
+          lat: beneficiary.location.lat,
+          lng: beneficiary.location.lng,
+          status: taskStatus,
+          title: beneficiary.name,
+          description: `${packages.find(p => p.id === task.packageId)?.name || 'طرد غير محدد'}`,
+          data: beneficiary
+        });
+      }
+    });
+
+    // العثور على المهام القريبة (في نطاق 5 كم)
+    const nearbyTasks = tasks.filter(task => {
+      if (task.courierId === courier.id || !courier.currentLocation) return false;
+      
+      const beneficiary = beneficiaries.find(b => b.id === task.beneficiaryId);
+      if (!beneficiary || !beneficiary.location) return false;
+
+      // حساب المسافة التقريبية
+      const distance = Math.sqrt(
+        Math.pow(beneficiary.location.lat - courier.currentLocation!.lat, 2) +
+        Math.pow(beneficiary.location.lng - courier.currentLocation!.lng, 2)
+      ) * 111; // تحويل تقريبي إلى كيلومتر
+
+      return distance <= 5; // 5 كم
+    });
+
+    setTrackingData({
+      courier,
+      mapPoints,
+      nearbyTasks
+    });
     setSelectedCourier(courier);
+    setModalType('track-location');
     setShowModal(true);
   };
 
@@ -875,116 +958,189 @@ export default function CouriersManagementPage() {
               </div>
             )}
 
-            {/* Track Location */}
+            {/* Track Location Modal */}
             {modalType === 'track-location' && selectedCourier && (
-              <div className="space-y-4">
-                <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                  <h4 className="font-semibold text-green-800 mb-3">موقع المندوب الحالي</h4>
-                  {selectedCourier.currentLocation ? (
-                    <div className="space-y-3">
-                      <div className="bg-white p-4 rounded-lg">
-                        <div className="flex items-center space-x-2 space-x-reverse mb-2">
-                          <MapPin className="w-5 h-5 text-green-600" />
-                          <span className="font-medium text-gray-900">الإحداثيات</span>
-                        </div>
-                        <p className="text-sm text-gray-700">
-                          خط العرض: {selectedCourier.currentLocation.lat.toFixed(6)}
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          خط الطول: {selectedCourier.currentLocation.lng.toFixed(6)}
-                        </p>
-                      </div>
-                      
-                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="bg-gray-50 p-3 border-b border-gray-200">
-                          <h5 className="font-medium text-gray-900">خريطة الموقع المباشر</h5>
-                        </div>
-                        <div className="p-4">
-                          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                            <div className="flex items-center space-x-2 space-x-reverse mb-3">
-                              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                              <span className="text-green-700 font-medium">المندوب متصل ومتاح</span>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-green-600">آخر تحديث:</span>
-                                <span className="font-medium text-green-800 mr-2">منذ دقيقتين</span>
-                              </div>
-                              <div>
-                                <span className="text-green-600">دقة الموقع:</span>
-                                <span className="font-medium text-green-800 mr-2">عالية (±5 متر)</span>
-                              </div>
-                              <div>
-                                <span className="text-green-600">السرعة:</span>
-                                <span className="font-medium text-green-800 mr-2">15 كم/ساعة</span>
-                              </div>
-                              <div>
-                                <span className="text-green-600">الاتجاه:</span>
-                                <span className="font-medium text-green-800 mr-2">شمال شرق</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
-                            <h6 className="font-medium text-blue-800 mb-2">المهام القريبة</h6>
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-blue-700">مهمة #TK-001</span>
-                                <span className="text-blue-900 font-medium">0.8 كم</span>
-                              </div>
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-blue-700">مهمة #TK-003</span>
-                                <span className="text-blue-900 font-medium">1.2 كم</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+              <div className="space-y-6">
+                {/* Courier Info */}
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-3">معلومات المندوب</h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-blue-700">الاسم:</span>
+                      <span className="font-medium text-blue-900 mr-2">{selectedCourier.name}</span>
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-600">الموقع غير متاح</p>
-                      <p className="text-sm text-gray-500">المندوب لم يشارك موقعه بعد</p>
+                    <div>
+                      <span className="text-blue-700">الحالة:</span>
+                      <Badge 
+                        variant={
+                          selectedCourier.status === 'active' ? 'success' :
+                          selectedCourier.status === 'busy' ? 'warning' : 'error'
+                        } 
+                        size="sm" 
+                        className="mr-2"
+                      >
+                        {selectedCourier.status === 'active' ? 'نشط' :
+                         selectedCourier.status === 'busy' ? 'مشغول' : 'غير متصل'}
+                      </Badge>
                     </div>
-                  )}
+                    <div>
+                      <span className="text-blue-700">التقييم:</span>
+                      <span className="font-medium text-blue-900 mr-2">{selectedCourier.rating} ⭐</span>
+                    </div>
+                    <div>
+                      <span className="text-blue-700">المهام المكتملة:</span>
+                      <span className="font-medium text-blue-900 mr-2">{selectedCourier.completedTasks}</span>
+                    </div>
+                    {selectedCourier.currentLocation && (
+                      <>
+                        <div>
+                          <span className="text-blue-700">خط العرض:</span>
+                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lat.toFixed(6)}</span>
+                        </div>
+                        <div>
+                          <span className="text-blue-700">خط الطول:</span>
+                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lng.toFixed(6)}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex space-x-3 space-x-reverse justify-end pt-4">
+                {/* Interactive Map */}
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 bg-gray-50">
+                    <h4 className="font-semibold text-gray-900">خريطة تتبع المندوب</h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      الموقع الحالي والمهام المرتبطة ({trackingData.mapPoints.length} نقطة)
+                    </p>
+                  </div>
+                  <GazaMap 
+                    points={trackingData.mapPoints}
+                    onPointClick={(data) => {
+                      if (data.id !== selectedCourier.id) {
+                        // إذا تم النقر على مستفيد، عرض تفاصيله
+                        alert(`المستفيد: ${data.name}\nالهاتف: ${data.phone}\nالعنوان: ${data.address}`);
+                      }
+                    }}
+                    activeFilter="all"
+                    className="h-80"
+                  />
+                </div>
+
+                {/* Nearby Tasks */}
+                {trackingData.nearbyTasks.length > 0 && (
+                  <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-3">
+                      المهام القريبة ({trackingData.nearbyTasks.length})
+                    </h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {trackingData.nearbyTasks.map(task => {
+                        const beneficiary = beneficiaries.find(b => b.id === task.beneficiaryId);
+                        const packageInfo = packages.find(p => p.id === task.packageId);
+                        return (
+                          <div key={task.id} className="bg-white p-3 rounded-lg flex justify-between items-center">
+                            <div>
+                              <p className="font-medium text-gray-900">{beneficiary?.name}</p>
+                              <p className="text-sm text-gray-600">{packageInfo?.name}</p>
+                            </div>
+                            <Badge variant="info" size="sm">
+                              {task.status === 'pending' ? 'في الانتظار' :
+                               task.status === 'assigned' ? 'معين' : 'قيد التنفيذ'}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Real-time Status */}
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-gray-700">متصل مباشر</span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      آخر تحديث: {new Date().toLocaleTimeString('ar-SA')}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
                   <Button variant="secondary" onClick={() => setShowModal(false)}>
                     إغلاق
-                  </Button>
-                  <Button variant="primary">
-                    تحديث الموقع
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* Assign Task */}
-            {modalType === 'assign-task' && selectedCourier && (
-              <div className="space-y-4">
+           {/* Assign Task Modal */}
+           {modalType === 'assign-task' && selectedCourier && (
+             <div className="space-y-6">
+                {/* Courier Info */}
                 <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
-                  <h4 className="font-semibold text-purple-800 mb-3">تعيين مهمة جديدة</h4>
-                  <p className="text-purple-700 text-sm">
-                    سيتم تعيين مهمة جديدة للمندوب {selectedCourier.name}
-                  </p>
+                  <h4 className="font-semibold text-purple-800 mb-3">تعيين مهمة للمندوب</h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-purple-700">المندوب:</span>
+                      <span className="font-medium text-purple-900 mr-2">{selectedCourier.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700">التقييم:</span>
+                      <span className="font-medium text-purple-900 mr-2">{selectedCourier.rating} ⭐</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700">المهام المكتملة:</span>
+                      <span className="font-medium text-purple-900 mr-2">{selectedCourier.completedTasks}</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700">الحالة:</span>
+                      <Badge 
+                        variant={
+                          selectedCourier.status === 'active' ? 'success' :
+                          selectedCourier.status === 'busy' ? 'warning' : 'error'
+                        } 
+                        size="sm" 
+                        className="mr-2"
+                      >
+                        {selectedCourier.status === 'active' ? 'نشط' :
+                         selectedCourier.status === 'busy' ? 'مشغول' : 'غير متصل'}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Task Assignment Form */}
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">اختيار المهمة</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                      <option value="">اختر مهمة متاحة</option>
-                      <option value="task-1">تسليم طرد غذائي - أحمد محمد (خان يونس)</option>
-                      <option value="task-2">تسليم طرد طبي - فاطمة أحمد (غزة)</option>
-                      <option value="task-3">تسليم طرد ملابس - خالد سالم (رفح)</option>
+                    <select
+                      value={assignForm.taskId}
+                      onChange={(e) => setAssignForm({...assignForm, taskId: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">اختر المهمة</option>
+                      {tasks.filter(t => !t.courierId || t.status === 'pending').map(task => {
+                        const beneficiary = beneficiaries.find(b => b.id === task.beneficiaryId);
+                        const packageInfo = packages.find(p => p.id === task.packageId);
+                        return (
+                          <option key={task.id} value={task.id}>
+                            {beneficiary?.name} - {packageInfo?.name} ({beneficiary?.detailedAddress.district})
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">أولوية المهمة</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select
+                      value={assignForm.priority}
+                      onChange={(e) => setAssignForm({...assignForm, priority: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="low">منخفضة</option>
                       <option value="normal">عادية</option>
                       <option value="high">عالية</option>
                       <option value="urgent">عاجلة</option>
@@ -992,59 +1148,85 @@ export default function CouriersManagementPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">موعد التسليم المطلوب</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">موعد التسليم المحدد</label>
                     <input
                       type="datetime-local"
+                      value={assignForm.scheduledAt}
+                      onChange={(e) => setAssignForm({...assignForm, scheduledAt: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      defaultValue={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات للمندوب</label>
                     <textarea
+                      value={assignForm.notes}
+                      onChange={(e) => setAssignForm({...assignForm, notes: e.target.value})}
+                      placeholder="تعليمات خاصة للمندوب..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={3}
-                      placeholder="تعليمات خاصة أو ملاحظات مهمة للمندوب..."
                     />
                   </div>
 
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h5 className="font-medium text-blue-800 mb-2">معلومات المندوب:</h5>
-                    <div className="grid md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-blue-700">التقييم:</span>
-                        <span className="font-medium text-blue-900 mr-2">{selectedCourier.rating}/5</span>
-                      </div>
-                      <div>
-                        <span className="text-blue-700">المهام المكتملة:</span>
-                        <span className="font-medium text-blue-900 mr-2">{selectedCourier.completedTasks}</span>
-                      </div>
-                      <div>
-                        <span className="text-blue-700">الحالة:</span>
-                        <Badge variant={selectedCourier.status === 'active' ? 'success' : 'warning'} size="sm" className="mr-2">
-                          {selectedCourier.status === 'active' ? 'نشط' : selectedCourier.status === 'busy' ? 'مشغول' : 'غير متصل'}
-                        </Badge>
-                      </div>
-                      <div>
-                        <span className="text-blue-700">معتمد إنسانياً:</span>
-                        <Badge variant={selectedCourier.isHumanitarianApproved ? 'success' : 'error'} size="sm" className="mr-2">
-                          {selectedCourier.isHumanitarianApproved ? 'معتمد' : 'غير معتمد'}
-                        </Badge>
-                      </div>
+                  {/* Task Details Preview */}
+                  {assignForm.taskId && (
+                    <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                      <h5 className="font-medium text-green-800 mb-2">تفاصيل المهمة المحددة</h5>
+                      {(() => {
+                        const task = tasks.find(t => t.id === assignForm.taskId);
+                        const beneficiary = task ? beneficiaries.find(b => b.id === task.beneficiaryId) : null;
+                        const packageInfo = task ? packages.find(p => p.id === task.packageId) : null;
+                        
+                        return task && beneficiary && packageInfo ? (
+                          <div className="grid md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-green-700">المستفيد:</span>
+                              <span className="font-medium text-green-900 mr-2">{beneficiary.name}</span>
+                            </div>
+                            <div>
+                              <span className="text-green-700">الطرد:</span>
+                              <span className="font-medium text-green-900 mr-2">{packageInfo.name}</span>
+                            </div>
+                            <div>
+                              <span className="text-green-700">المنطقة:</span>
+                              <span className="font-medium text-green-900 mr-2">{beneficiary.detailedAddress.district}</span>
+                            </div>
+                            <div>
+                              <span className="text-green-700">الهاتف:</span>
+                              <span className="font-medium text-green-900 mr-2">{beneficiary.phone}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-green-700">معلومات المهمة غير متاحة</p>
+                        );
+                      })()}
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="flex space-x-3 space-x-reverse justify-end pt-4">
                   <Button variant="secondary" onClick={() => setShowModal(false)}>
                     إلغاء
                   </Button>
-                  <Button variant="primary" onClick={() => {
-                    setNotification({ message: `تم تعيين مهمة جديدة للمندوب ${selectedCourier.name}`, type: 'success' });
-                    setTimeout(() => setNotification(null), 3000);
-                    setShowModal(false);
-                  }}>
+                  <Button 
+                    variant="primary" 
+                    onClick={() => {
+                      if (!assignForm.taskId) {
+                        setNotification({ message: 'يرجى اختيار المهمة', type: 'error' });
+                        setTimeout(() => setNotification(null), 3000);
+                        return;
+                      }
+                      
+                      setNotification({ 
+                        message: `تم تعيين المهمة للمندوب ${selectedCourier.name} بنجاح`, 
+                        type: 'success' 
+                      });
+                      setTimeout(() => setNotification(null), 3000);
+                      setShowModal(false);
+                      logInfo(`تم تعيين مهمة ${assignForm.taskId} للمندوب ${selectedCourier.name}`, 'CouriersManagementPage');
+                    }}
+                    disabled={!assignForm.taskId}
+                  >
                     تعيين المهمة
                   </Button>
                 </div>
