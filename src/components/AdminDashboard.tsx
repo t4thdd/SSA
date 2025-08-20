@@ -32,6 +32,7 @@ import TestSentryPage from './pages/TestSentryPage';
 import BackupManagementPage from './pages/BackupManagementPage';
 import FamiliesDashboard from './FamiliesDashboard';
 import MessagesSettingsPage from './pages/MessagesSettingsPage';
+import GazaMap, { type MapPoint } from './GazaMap';
 
 interface NavItem {
   id: string;
@@ -60,6 +61,8 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
   const [stats, setStats] = useState<any>(calculateStats());
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [selectedBeneficiaryForMap, setSelectedBeneficiaryForMap] = useState<any>(null);
+  const [showMapModal, setShowMapModal] = useState(false);
 
   // Fetch data from Supabase
   useEffect(() => {
@@ -76,6 +79,37 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
   const handleNavigateToIndividualSend = (beneficiaryId: string) => {
     setBeneficiaryIdForIndividualSend(beneficiaryId);
     setActiveTab('individual-send');
+  };
+
+  // تحويل بيانات المستفيدين إلى نقاط خريطة
+  const convertBeneficiariesToMapPoints = (): MapPoint[] => {
+    return mockBeneficiaries.map(beneficiary => {
+      // تحديد حالة النقطة بناءً على حالة المستفيد
+      let status: 'delivered' | 'problem' | 'rescheduled' | 'pending' = 'pending';
+      
+      if (beneficiary.status === 'active' && beneficiary.identityStatus === 'verified') {
+        status = 'delivered';
+      } else if (beneficiary.status === 'suspended' || beneficiary.identityStatus === 'rejected') {
+        status = 'problem';
+      } else if (beneficiary.eligibilityStatus === 'under_review') {
+        status = 'rescheduled';
+      }
+
+      return {
+        id: beneficiary.id,
+        lat: beneficiary.location.lat,
+        lng: beneficiary.location.lng,
+        status,
+        title: beneficiary.name,
+        description: `${beneficiary.detailedAddress.district} - ${beneficiary.phone}`,
+        data: beneficiary
+      };
+    });
+  };
+
+  const handleMapPointClick = (beneficiary: any) => {
+    setSelectedBeneficiaryForMap(beneficiary);
+    setShowMapModal(true);
   };
 
   // Navigation structure with hierarchical organization
@@ -834,16 +868,16 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
             {/* System Overview Map */}
             <Card>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">خريطة النظام</h3>
-              <div className="bg-gray-50 rounded-lg h-64 flex items-center justify-center relative">
-                <div className="text-center z-10">
-                  <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-700">قطاع غزة - نظرة شاملة</p>
-                  <p className="text-sm text-gray-500 mt-2">{stats?.totalBeneficiaries || 0} مستفيد في 5 محافظات</p>
+              <div className="relative">
+                <GazaMap 
+                  points={convertBeneficiariesToMapPoints()}
+                  onPointClick={handleMapPointClick}
+                  activeFilter="all"
+                  className="h-64 rounded-lg"
+                />
+                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 text-xs text-gray-600">
+                  {stats?.totalBeneficiaries || 0} مستفيد في 5 محافظات
                 </div>
-                <div className="absolute top-12 left-16 w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="absolute top-20 right-20 w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="absolute bottom-16 left-24 w-2 h-2 bg-orange-500 rounded-full"></div>
-                <div className="absolute bottom-24 right-16 w-2 h-2 bg-purple-500 rounded-full"></div>
               </div>
             </Card>
           </div>
@@ -1187,6 +1221,80 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
           </div>
         </div>
       </div>
+
+      {/* Map Modal for Beneficiary Details */}
+      {showMapModal && selectedBeneficiaryForMap && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">تفاصيل المستفيد من الخريطة</h3>
+              <button 
+                onClick={() => setShowMapModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                <h4 className="font-semibold text-blue-800 mb-3">معلومات المستفيد</h4>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-blue-700">الاسم:</span>
+                    <span className="font-medium text-blue-900 mr-2">{selectedBeneficiaryForMap.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">رقم الهوية:</span>
+                    <span className="font-medium text-blue-900 mr-2">{selectedBeneficiaryForMap.nationalId}</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">الهاتف:</span>
+                    <span className="font-medium text-blue-900 mr-2">{selectedBeneficiaryForMap.phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">المنطقة:</span>
+                    <span className="font-medium text-blue-900 mr-2">{selectedBeneficiaryForMap.detailedAddress.district}</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">العنوان الكامل:</span>
+                    <span className="font-medium text-blue-900 mr-2">{selectedBeneficiaryForMap.address}</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">الحالة:</span>
+                    <Badge 
+                      variant={
+                        selectedBeneficiaryForMap.status === 'active' ? 'success' :
+                        selectedBeneficiaryForMap.status === 'pending' ? 'warning' : 'error'
+                      } 
+                      size="sm" 
+                      className="mr-2"
+                    >
+                      {selectedBeneficiaryForMap.status === 'active' ? 'نشط' :
+                       selectedBeneficiaryForMap.status === 'pending' ? 'معلق' : 'موقوف'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 space-x-reverse justify-end">
+                <Button variant="secondary" onClick={() => setShowMapModal(false)}>
+                  إغلاق
+                </Button>
+                <Button 
+                  variant="primary" 
+                  onClick={() => {
+                    setShowMapModal(false);
+                    handleNavigateToIndividualSend(selectedBeneficiaryForMap.id);
+                  }}
+                >
+                  إرسال طرد
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
