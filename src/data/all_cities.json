@@ -1,0 +1,404 @@
+{
+  "1": {
+    "governorate_id": 1,
+    "cities": {
+      "28": {
+        "id": 38,
+        "name": "معسكر جباليا",
+        "ratio": 6,
+        "governorate_id": 1,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "29": {
+        "id": 39,
+        "name": "جباليا البلد",
+        "ratio": 6,
+        "governorate_id": 1,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "30": {
+        "id": 40,
+        "name": "بيت حانون",
+        "ratio": 6,
+        "governorate_id": 1,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "31": {
+        "id": 41,
+        "name": "بيت لاهيا",
+        "ratio": 6,
+        "governorate_id": 1,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "32": {
+        "id": 42,
+        "name": "التوام والصفطاوي",
+        "ratio": 6,
+        "governorate_id": 1,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      }
+    }
+  },
+  "2": {
+    "governorate_id": 2,
+    "cities": {
+      "16": {
+        "id": 26,
+        "name": "الشيخ عجلين",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "17": {
+        "id": 27,
+        "name": "تل الهوا",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "18": {
+        "id": 28,
+        "name": "الصبرة",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "19": {
+        "id": 29,
+        "name": "الرمال",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "20": {
+        "id": 30,
+        "name": "الزيتون",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "21": {
+        "id": 31,
+        "name": "الشجاعية",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "22": {
+        "id": 32,
+        "name": "التفاح والدرج",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "23": {
+        "id": 33,
+        "name": "اليرموك والنفق",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "24": {
+        "id": 34,
+        "name": "الشاطئ",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "25": {
+        "id": 35,
+        "name": "الشيخ رضوان",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "26": {
+        "id": 36,
+        "name": "النصر",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      },
+      "27": {
+        "id": 37,
+        "name": "الكرامة",
+        "ratio": 6,
+        "governorate_id": 2,
+        "created_at": null,
+        "updated_at": "2024-07-07T03:57:14.000000Z"
+      }
+    }
+  },
+  "3": {
+    "governorate_id": 3,
+    "cities": [
+      {
+        "id": 5,
+        "name": "النصيرات",
+        "ratio": 23,
+        "governorate_id": 3,
+        "created_at": null,
+        "updated_at": "2024-10-30T19:05:56.000000Z"
+      },
+      {
+        "id": 6,
+        "name": "البريج",
+        "ratio": 6,
+        "governorate_id": 3,
+        "created_at": null,
+        "updated_at": "2024-08-27T16:14:48.000000Z"
+      },
+      {
+        "id": 7,
+        "name": "الزوايدة",
+        "ratio": 16,
+        "governorate_id": 3,
+        "created_at": null,
+        "updated_at": "2024-10-30T19:05:56.000000Z"
+      },
+      {
+        "id": 8,
+        "name": "المغازي",
+        "ratio": 6,
+        "governorate_id": 3,
+        "created_at": null,
+        "updated_at": "2024-10-30T19:05:56.000000Z"
+      },
+      {
+        "id": 9,
+        "name": "دير البلح",
+        "ratio": 48,
+        "governorate_id": 3,
+        "created_at": null,
+        "updated_at": "2024-10-30T19:05:56.000000Z"
+      },
+      {
+        "id": 12,
+        "name": "المصدر",
+        "ratio": 1,
+        "governorate_id": 3,
+        "created_at": "2024-07-07T05:58:56.000000Z",
+        "updated_at": "2024-08-25T19:42:06.000000Z"
+      }
+    ]
+  },
+  "4": {
+    "governorate_id": 4,
+    "cities": {
+      "6": {
+        "id": 13,
+        "name": " منطقة البلد",
+        "ratio": 8,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      },
+      "7": {
+        "id": 14,
+        "name": "منطقة معن",
+        "ratio": 8,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      },
+      "8": {
+        "id": 15,
+        "name": "المنطقة الشرقية",
+        "ratio": 3,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      },
+      "9": {
+        "id": 16,
+        "name": "منطقة القرارة ",
+        "ratio": 3,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      },
+      "10": {
+        "id": 17,
+        "name": "منطقة السطر واصداء",
+        "ratio": 12,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      },
+      "11": {
+        "id": 18,
+        "name": "منطقة حي الامل",
+        "ratio": 8,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      },
+      "12": {
+        "id": 19,
+        "name": "منطقة المعسكر",
+        "ratio": 8,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      },
+      "13": {
+        "id": 20,
+        "name": "مواصي خانيونس",
+        "ratio": 50,
+        "governorate_id": 4,
+        "created_at": null,
+        "updated_at": "2024-09-07T18:50:09.000000Z"
+      }
+    }
+  },
+  "5": {
+    "governorate_id": 5,
+    "cities": []
+  },
+  "6": {
+    "governorate_id": 6,
+    "cities": {
+      "33": {
+        "id": 43,
+        "name": "المواصي",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "34": {
+        "id": 44,
+        "name": "خربة العدس",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "35": {
+        "id": 45,
+        "name": "حي الزهور",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "36": {
+        "id": 46,
+        "name": "الجنينة",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "37": {
+        "id": 47,
+        "name": "مصبح",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "38": {
+        "id": 48,
+        "name": "موراج",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "39": {
+        "id": 49,
+        "name": "النصر",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "40": {
+        "id": 50,
+        "name": "حي الحشاش",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "41": {
+        "id": 58,
+        "name": "التنور",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "42": {
+        "id": 59,
+        "name": "الشوكة",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "43": {
+        "id": 60,
+        "name": "السعودي",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "44": {
+        "id": 61,
+        "name": "الشابورة",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      },
+      "45": {
+        "id": 62,
+        "name": "تل السلطان",
+        "ratio": 0,
+        "governorate_id": 6,
+        "created_at": null,
+        "updated_at": null
+      }
+    }
+  },
+  "7": {
+    "governorate_id": 7,
+    "cities": {
+      "14": {
+        "id": 23,
+        "name": "الزهراء والمغراقة",
+        "ratio": 23,
+        "governorate_id": 7,
+        "created_at": null,
+        "updated_at": "2024-10-30T19:05:56.000000Z"
+      },
+      "15": {
+        "id": 25,
+        "name": "جحر الديك",
+        "ratio": 23,
+        "governorate_id": 7,
+        "created_at": null,
+        "updated_at": "2024-10-30T19:05:56.000000Z"
+      }
+    }
+  }
+}
