@@ -28,7 +28,6 @@ import ComprehensiveReportsPage from './pages/ComprehensiveReportsPage';
 import SystemSettingsPage from './pages/SystemSettingsPage';
 import AlertsManagementPage from './pages/AlertsManagementPage';
 import CouriersManagementPage from './pages/CouriersManagementPage';
-import TestSentryPage from './pages/TestSentryPage';
 import BackupManagementPage from './pages/BackupManagementPage';
 import FamiliesDashboard from './FamiliesDashboard';
 import MessagesSettingsPage from './pages/MessagesSettingsPage';
@@ -245,8 +244,7 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
       name: 'أدوات التطوير',
       icon: Settings,
       children: [
-        { id: 'test-supabase', name: 'اختبار Supabase', icon: Database },
-        { id: 'test-sentry', name: 'اختبار Sentry', icon: Shield }
+        { id: 'test-supabase', name: 'اختبار Supabase', icon: Database }
       ]
     }
   ];
@@ -670,23 +668,6 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
       );
     }
 
-    if (activeTab === 'test-sentry') {
-      return (
-        <div className="space-y-6">
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-              <IconComponent className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">{pageInfo.name}</h2>
-              <p className="text-gray-600 mt-1">اختبار تكامل Sentry مع النظام</p>
-            </div>
-          </div>
-          <TestSentryPage />
-        </div>
-      );
-    }
-
     // Overview Tab
     if (activeTab === 'overview') {
       return (
@@ -823,7 +804,7 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
               <Card className="bg-gray-50 col-span-4">
                 <div className="text-center text-gray-500">
                   <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>لا توجد إحصائيات متاحة</p>
+                  <p className="text-lg font-medium">لا توجد إحصائيات متاحة</p>
                   <p className="text-sm mt-1">تأكد من الاتصال بـ Supabase</p>
                 </div>
               </Card>
