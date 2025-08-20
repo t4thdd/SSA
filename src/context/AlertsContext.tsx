@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { type Alert, mockAlerts } from '../data/mockData';
+import { type Alert, mockAlerts, mockDistributionRequests } from '../data/mockData';
 
 interface AlertsContextType {
   alerts: Alert[];
@@ -57,6 +57,33 @@ export const AlertsProvider: React.FC<AlertsProviderProps> = ({ children }) => {
   const clearAllAlerts = () => {
     setAlerts([]);
   };
+  // إضافة تنبيه تلقائي عند وجود طلبات توزيع معلقة
+  React.useEffect(() => {
+    const pendingRequests = mockDistributionRequests.filter(r => r.status === 'pending');
+    if (pendingRequests.length > 0) {
+      const existingAlert = alerts.find(a => 
+        a.type === 'urgent' && 
+        a.title.includes('طلبات توزيع معلقة') && 
+        !a.isRead
+      );
+      
+      if (!existingAlert) {
+        const newAlert: Alert = {
+          id: `alert-pending-requests-${Date.now()}`,
+          type: 'urgent',
+          title: 'طلبات توزيع معلقة تحتاج مراجعة',
+          description: `يوجد ${pendingRequests.length} طلب توزيع في انتظار مراجعة الأدمن`,
+          relatedId: 'admin-dashboard',
+          relatedType: 'task',
+          priority: 'high',
+          isRead: false,
+          createdAt: new Date().toISOString()
+        };
+        
+        setAlerts(prev => [newAlert, ...prev]);
+      }
+    }
+  }, [alerts]);
 
   const value = {
     alerts,

@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { Clock, Truck, Users, MapPin, CheckCircle, AlertTriangle, Calendar, Search, Filter, Plus, Eye, Edit, Phone, RefreshCw, Download, Star, Package, User, Activity, TrendingUp, BarChart3 } from 'lucide-react';
+import { Clock, Truck, Users, MapPin, CheckCircle, AlertTriangle, Calendar, Search, Filter, Plus, Eye, Edit, Phone, RefreshCw, Download, Star, Package, User, Activity, TrendingUp, BarChart3, FileText, Building2, Heart } from 'lucide-react';
 import { 
   mockTasks, 
   mockBeneficiaries, 
   mockPackages, 
   mockCouriers,
+  mockDistributionRequests,
+  mockOrganizations,
+  mockFamilies,
+  mockPackageTemplates,
   type Task, 
   type Beneficiary, 
-  type Package as PackageType, 
+  type Package as PackageType,
+  type DistributionRequest,
   type Courier // Assuming Courier is correctly imported
 } from '../../data/mockData';
 import { useErrorLogger } from '../../utils/errorLogger';
@@ -31,6 +36,10 @@ export default function TasksManagementPage() {
   const beneficiaries = mockBeneficiaries;
   const packages = mockPackages;
   const couriers = mockCouriers;
+  const distributionRequests = mockDistributionRequests;
+  const organizations = mockOrganizations;
+  const families = mockFamilies;
+  const packageTemplates = mockPackageTemplates;
 
   // Form states for modals
   const [assignForm, setAssignForm] = useState({
@@ -561,6 +570,12 @@ export default function TasksManagementPage() {
                               {packageInfo?.name || 'طرد غير محدد'}
                             </div>
                             <div className="text-sm text-gray-500">#{task.id}</div>
+                            {task.distributionRequestId && (
+                              <div className="text-xs text-blue-600 flex items-center space-x-1 space-x-reverse mt-1">
+                                <FileText className="w-3 h-3" />
+                                <span>طلب توزيع: {task.distributionRequestId.slice(-6)}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -782,6 +797,71 @@ export default function TasksManagementPage() {
                     {new Date(selectedTask.createdAt).toLocaleDateString('ar-SA')}
                   </span>
                 </div>
+                {selectedTask.distributionRequestId && (
+                  <div className="md:col-span-2">
+                    <span className="text-gray-600">طلب التوزيع المرتبط:</span>
+                    <div className="mt-2 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      {(() => {
+                        const request = distributionRequests.find(r => r.id === selectedTask.distributionRequestId);
+                        if (!request) return <span className="text-gray-500">طلب غير موجود</span>;
+                        
+                        const requesterInfo = request.requesterType === 'organization' 
+                          ? organizations.find(o => o.id === request.requesterId)
+                          : request.requesterType === 'family'
+                          ? families.find(f => f.id === request.requesterId)
+                          : null;
+                        
+                        const template = packageTemplates.find(t => t.id === request.packageTemplateId);
+                        
+                        return (
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center space-x-2 space-x-reverse">
+                              {request.requesterType === 'organization' ? (
+                                <Building2 className="w-4 h-4 text-blue-600" />
+                              ) : request.requesterType === 'family' ? (
+                                <Heart className="w-4 h-4 text-purple-600" />
+                              ) : (
+                                <User className="w-4 h-4 text-gray-600" />
+                              )}
+                              <span className="font-medium text-blue-900">
+                                {requesterInfo?.name || request.requesterName}
+                              </span>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-2">
+                              <div>
+                                <span className="text-blue-700">نوع الطلب:</span>
+                                <span className="font-medium text-blue-900 mr-1">
+                                  {request.type === 'individual' ? 'فردي' :
+                                   request.type === 'bulk' ? 'جماعي' : 'عائلي'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-blue-700">القالب:</span>
+                                <span className="font-medium text-blue-900 mr-1">{template?.name || 'غير محدد'}</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-700">الكمية المعتمدة:</span>
+                                <span className="font-medium text-blue-900 mr-1">{request.approvedQuantity || request.requestedQuantity}</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-700">تاريخ الطلب:</span>
+                                <span className="font-medium text-blue-900 mr-1">
+                                  {new Date(request.requestDate).toLocaleDateString('ar-SA')}
+                                </span>
+                              </div>
+                            </div>
+                            {request.notes && (
+                              <div className="mt-2">
+                                <span className="text-blue-700">ملاحظات الطلب:</span>
+                                <p className="text-blue-900 text-xs mt-1">{request.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

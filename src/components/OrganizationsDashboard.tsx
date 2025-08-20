@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Building2, Users, Package, Truck, Bell, BarChart3, Settings, MapPin, Calendar, FileText, AlertTriangle, CheckCircle, Clock, Plus, Search, Filter, Download, Eye, Edit, Phone, Star, UserPlus, Heart, TrendingUp, Activity, Database, MessageSquare, UserCheck, Crown, Key, Lock, ChevronRight, RefreshCw, LogOut } from 'lucide-react';
-import { mockBeneficiaries, mockPackages, mockOrganizations, mockFamilies, mockPackageTemplates, calculateStats, type Beneficiary, type Package as PackageType, type Organization, type Family, type PackageTemplate } from '../data/mockData';
+import { ArrowLeft, Building2, Users, Package, Truck, Bell, BarChart3, Settings, MapPin, Calendar, FileText, AlertTriangle, CheckCircle, Clock, Plus, Search, Filter, Download, Eye, Edit, Phone, Star, UserPlus, Heart, TrendingUp, Activity, Database, MessageSquare, UserCheck, Crown, Key, Lock, ChevronRight, RefreshCw, LogOut, Send } from 'lucide-react';
+import { mockBeneficiaries, mockPackages, mockOrganizations, mockFamilies, mockPackageTemplates, mockTasks, mockCouriers, mockDistributionRequests, calculateStats, type Beneficiary, type Package as PackageType, type Organization, type Family, type PackageTemplate, type DistributionRequest } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 import { useAlerts } from '../context/AlertsContext';
 import { useErrorLogger } from '../utils/errorLogger';
@@ -8,6 +8,7 @@ import { Button, Card, Input, Badge, Modal, StatCard, ExportModal } from './ui';
 import PackageTemplateForm from './PackageTemplateForm';
 import BeneficiariesManagement from '../BeneficiariesManagement';
 import SupabaseConnectionStatus from './SupabaseConnectionStatus';
+import OrganizationBulkSendPage from './pages/OrganizationBulkSendPage';
 import * as Sentry from '@sentry/react';
 
 interface OrganizationsDashboardProps {
@@ -16,6 +17,7 @@ interface OrganizationsDashboardProps {
 
 export default function OrganizationsDashboard({ onNavigateBack }: OrganizationsDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeSubPage, setActiveSubPage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'add' | 'edit' | 'view'>('add');
@@ -35,6 +37,7 @@ export default function OrganizationsDashboard({ onNavigateBack }: Organizations
   const organizationBeneficiaries = mockBeneficiaries.filter(b => b.organizationId === loggedInUser?.associatedId);
   const organizationPackages = mockPackages.filter(p => p.organizationId === loggedInUser?.associatedId);
   const organizationTemplates = mockPackageTemplates.filter(t => t.organization_id === loggedInUser?.associatedId);
+  const organizationRequests = mockDistributionRequests.filter(r => r.requesterId === loggedInUser?.associatedId);
 
   const stats = {
     totalBeneficiaries: organizationBeneficiaries.length,
@@ -74,6 +77,12 @@ export default function OrganizationsDashboard({ onNavigateBack }: Organizations
         { id: 'packages-tasks', name: 'مهام التوزيع', icon: Truck },
         { id: 'packages-analytics', name: 'تحليلات الطرود', icon: BarChart3 }
       ]
+    },
+    {
+      id: 'distribution-requests',
+      name: 'طلبات التوزيع',
+      icon: Send,
+      children: []
     },
     {
       id: 'reports',
@@ -234,6 +243,21 @@ export default function OrganizationsDashboard({ onNavigateBack }: Organizations
     }
   };
 
+  const handleNavigateToSubPage = (subPage: string) => {
+    setActiveSubPage(subPage);
+  };
+
+  const handleNavigateBackFromSubPage = () => {
+    setActiveSubPage(null);
+  };
+
+  // إذا كنا في صفحة فرعية، اعرضها
+  if (activeSubPage === 'bulk-send') {
+    return (
+      <OrganizationBulkSendPage onNavigateBack={handleNavigateBackFromSubPage} />
+    );
+  }
+
   const renderMainContent = () => {
     const pageInfo = getPageTitle(activeTab);
     const IconComponent = pageInfo.icon;
@@ -253,6 +277,14 @@ export default function OrganizationsDashboard({ onNavigateBack }: Organizations
               </div>
             </div>
             <div className="flex space-x-3 space-x-reverse">
+              <Button 
+                variant="primary" 
+                icon={Send} 
+                iconPosition="right"
+                onClick={() => handleNavigateToSubPage('bulk-send')}
+              >
+                طلب توزيع جماعي
+              </Button>
               <Button variant="secondary" icon={Download} iconPosition="right">
                 تصدير التقرير
               </Button>
@@ -402,6 +434,205 @@ export default function OrganizationsDashboard({ onNavigateBack }: Organizations
                 ))}
               </div>
             </Card>
+          </div>
+        </div>
+      );
+    }
+
+    // Distribution Requests Tab
+    if (activeTab === 'distribution-requests') {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">طلبات التوزيع</h2>
+              <p className="text-gray-600 mt-1">إدارة ومتابعة طلبات التوزيع الخاصة بالمؤسسة</p>
+            </div>
+            <div className="flex space-x-3 space-x-reverse">
+              <Button 
+                variant="primary" 
+                icon={Send} 
+                iconPosition="right"
+                onClick={() => handleNavigateToSubPage('bulk-send')}
+              >
+                طلب توزيع جماعي جديد
+              </Button>
+            </div>
+          </div>
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-xl border border-gray-200">
+              <div className="text-center">
+                <div className="bg-blue-100 p-3 rounded-xl mb-2">
+                  <Send className="w-6 h-6 text-blue-600 mx-auto" />
+                </div>
+                <p className="text-sm text-blue-600">إجمالي الطلبات</p>
+                <p className="text-2xl font-bold text-blue-900">{organizationRequests.length}</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl border border-gray-200">
+              <div className="text-center">
+                <div className="bg-yellow-100 p-3 rounded-xl mb-2">
+                  <Clock className="w-6 h-6 text-yellow-600 mx-auto" />
+                </div>
+                <p className="text-sm text-yellow-600">معلقة</p>
+                <p className="text-2xl font-bold text-yellow-900">
+                  {organizationRequests.filter(r => r.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl border border-gray-200">
+              <div className="text-center">
+                <div className="bg-green-100 p-3 rounded-xl mb-2">
+                  <CheckCircle className="w-6 h-6 text-green-600 mx-auto" />
+                </div>
+                <p className="text-sm text-green-600">معتمدة</p>
+                <p className="text-2xl font-bold text-green-900">
+                  {organizationRequests.filter(r => r.status === 'approved').length}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl border border-gray-200">
+              <div className="text-center">
+                <div className="bg-red-100 p-3 rounded-xl mb-2">
+                  <AlertTriangle className="w-6 h-6 text-red-600 mx-auto" />
+                </div>
+                <p className="text-sm text-red-600">مرفوضة</p>
+                <p className="text-2xl font-bold text-red-900">
+                  {organizationRequests.filter(r => r.status === 'rejected').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Requests Table */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-900">
+                طلبات التوزيع ({organizationRequests.length})
+              </h3>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الطلب
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      النوع
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الكمية
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الحالة
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      تاريخ الطلب
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الإجراءات
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {organizationRequests.length > 0 ? (
+                    organizationRequests.map((request) => (
+                      <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="bg-blue-100 p-2 rounded-lg ml-4">
+                              <Send className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                طلب #{request.id.slice(-6)}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {request.targetGovernorate && request.targetCity && request.targetDistrict
+                                  ? `${request.targetGovernorate} - ${request.targetDistrict}`
+                                  : 'طلب فردي'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge variant={
+                            request.type === 'bulk' ? 'info' :
+                            request.type === 'family_bulk' ? 'warning' : 'success'
+                          } size="sm">
+                            {request.type === 'bulk' ? 'جماعي' :
+                             request.type === 'family_bulk' ? 'عائلي' : 'فردي'}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div>
+                            <span className="font-medium">
+                              {request.approvedQuantity || request.requestedQuantity}
+                            </span>
+                            {request.approvedQuantity && request.approvedQuantity !== request.requestedQuantity && (
+                              <span className="text-orange-600 text-xs mr-1">
+                                (كان {request.requestedQuantity})
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge variant={
+                            request.status === 'approved' ? 'success' :
+                            request.status === 'rejected' ? 'error' :
+                            request.status === 'in_progress' ? 'warning' :
+                            request.status === 'completed' ? 'success' : 'info'
+                          } size="sm">
+                            {request.status === 'pending' ? 'معلق' :
+                             request.status === 'approved' ? 'معتمد' :
+                             request.status === 'rejected' ? 'مرفوض' :
+                             request.status === 'in_progress' ? 'قيد التنفيذ' : 'مكتمل'}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(request.requestDate).toLocaleDateString('ar-SA')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2 space-x-reverse">
+                            <button 
+                              className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors" 
+                              title="عرض التفاصيل"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {request.status === 'approved' && (
+                              <button 
+                                className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-colors" 
+                                title="تتبع التنفيذ"
+                              >
+                                <Truck className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center">
+                        <div className="text-gray-500">
+                          <Send className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                          <p className="text-lg font-medium">لا توجد طلبات توزيع</p>
+                          <p className="text-sm mt-2">لم يتم إنشاء أي طلبات توزيع بعد</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       );
@@ -991,7 +1222,7 @@ export default function OrganizationsDashboard({ onNavigateBack }: Organizations
                       
                       <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center space-x-2 space-x-reverse">
-                          <User className="w-3 h-3" />
+                          <Users className="w-3 h-3" />
                           <span>{beneficiary?.name || 'غير محدد'}</span>
                         </div>
                         {courier && (

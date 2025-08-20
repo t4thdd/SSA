@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Phone, MapPin, Calendar, Shield, Package, FileText, CheckCircle, AlertTriangle, Clock, Edit, Eye, Download, UserPlus, UserX, Star, Award, Truck, Camera, FileSignature as Signature, Building2, Heart, Activity, Archive, Send, MessageSquare, ZoomIn, ExternalLink, Copy, CheckCircle2, Users, Upload, Ban, FileCheck, Navigation } from 'lucide-react';
+import { X, User, Phone, MapPin, Calendar, Shield, Package, FileText, CheckCircle, AlertTriangle, Clock, Edit, Eye, Download, UserPlus, UserX, Star, Award, Truck, Camera, FileSignature as Signature, Building2, Heart, Activity, Archive, Send, MessageSquare, ZoomIn, ExternalLink, Copy, CheckCircle2, Users, Upload, Ban, FileCheck, Navigation, List } from 'lucide-react';
 import { 
   type Beneficiary, 
   mockPackages, 
@@ -9,7 +9,12 @@ import {
   type Package as PackageType,
   type Task,
   type Courier,
-  type ActivityLog
+  type ActivityLog,
+  type DistributionRequest,
+  mockDistributionRequests,
+  mockPackageTemplates,
+  mockOrganizations,
+  mockFamilies
 } from '../data/mockData';
 import { Modal, Button, Input, Badge } from './ui';
 
@@ -45,6 +50,13 @@ export default function BeneficiaryProfileModal({ beneficiary, onClose, onNaviga
   const beneficiaryPackages = mockPackages.filter(p => p.beneficiaryId === beneficiary.id);
   const beneficiaryTasks = mockTasks.filter(t => t.beneficiaryId === beneficiary.id);
   const beneficiaryActivities = mockActivityLog.filter(a => a.beneficiaryId === beneficiary.id);
+  const relatedDistributionRequests = mockDistributionRequests.filter(request => 
+    request.beneficiaryIds?.includes(beneficiary.id) || 
+    (request.type === 'bulk' && 
+     beneficiary.detailedAddress.governorate === request.targetGovernorate &&
+     beneficiary.detailedAddress.city === request.targetCity &&
+     beneficiary.detailedAddress.district === request.targetDistrict)
+  );
   const currentTask = beneficiaryTasks.find(t => ['assigned', 'in_progress'].includes(t.status));
   const currentCourier = currentTask ? mockCouriers.find(c => c.id === currentTask.courierId) : null;
   const lastDeliveredTask = beneficiaryTasks.find(t => t.status === 'delivered');
@@ -56,6 +68,7 @@ export default function BeneficiaryProfileModal({ beneficiary, onClose, onNaviga
     { id: 'verification', name: 'التوثيقات', icon: Shield },
     { id: 'delivery', name: 'حالة التوصيل', icon: Truck },
     { id: 'activity', name: 'سجل النشاط', icon: Activity },
+    { id: 'distribution-requests', name: 'طلبات التوزيع', icon: List },
   ];
 
   const getStatusColor = (status: string) => {
@@ -895,6 +908,117 @@ export default function BeneficiaryProfileModal({ beneficiary, onClose, onNaviga
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Distribution Requests Tab */}
+          {activeSection === 'distribution-requests' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">طلبات التوزيع المرتبطة</h3>
+                <span className="text-sm text-gray-600">{relatedDistributionRequests.length} طلب</span>
+              </div>
+              
+              {relatedDistributionRequests.length > 0 ? (
+                <div className="space-y-3">
+                  {relatedDistributionRequests.map((request) => {
+                    const template = mockPackageTemplates.find(t => t.id === request.packageTemplateId);
+                    const requesterInfo = request.requesterType === 'organization' 
+                      ? mockOrganizations.find(o => o.id === request.requesterId)
+                      : request.requesterType === 'family'
+                      ? mockFamilies.find(f => f.id === request.requesterId)
+                      : null;
+                    
+                    return (
+                      <div key={request.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3 space-x-reverse">
+                            <div className="bg-blue-100 p-2 rounded-lg">
+                              {request.requesterType === 'organization' ? (
+                                <Building2 className="w-4 h-4 text-blue-600" />
+                              ) : request.requesterType === 'family' ? (
+                                <Heart className="w-4 h-4 text-purple-600" />
+                              ) : (
+                                <User className="w-4 h-4 text-gray-600" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                طلب #{request.id.slice(-6)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {requesterInfo?.name || request.requesterName}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant={
+                            request.status === 'approved' ? 'success' :
+                            request.status === 'rejected' ? 'error' :
+                            request.status === 'in_progress' ? 'warning' :
+                            request.status === 'completed' ? 'success' : 'info'
+                          } size="sm">
+                            {request.status === 'pending' ? 'معلق' :
+                             request.status === 'approved' ? 'معتمد' :
+                             request.status === 'rejected' ? 'مرفوض' :
+                             request.status === 'in_progress' ? 'قيد التنفيذ' : 'مكتمل'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">نوع الطلب:</span>
+                            <span className="font-medium text-gray-900 mr-2">
+                              {request.type === 'bulk' ? 'جماعي' :
+                               request.type === 'family_bulk' ? 'عائلي' : 'فردي'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">قالب الطرد:</span>
+                            <span className="font-medium text-gray-900 mr-2">{template?.name || 'غير محدد'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">الكمية:</span>
+                            <span className="font-medium text-gray-900 mr-2">
+                              {request.approvedQuantity || request.requestedQuantity}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">تاريخ الطلب:</span>
+                            <span className="font-medium text-gray-900 mr-2">
+                              {new Date(request.requestDate).toLocaleDateString('ar-SA')}
+                            </span>
+                          </div>
+                          {request.targetGovernorate && (
+                            <div className="md:col-span-2">
+                              <span className="text-gray-600">المنطقة المستهدفة:</span>
+                              <span className="font-medium text-gray-900 mr-2">
+                                {request.targetGovernorate} - {request.targetCity} - {request.targetDistrict}
+                              </span>
+                            </div>
+                          )}
+                          {request.notes && (
+                            <div className="md:col-span-2">
+                              <span className="text-gray-600">ملاحظات:</span>
+                              <p className="text-gray-900 text-xs mt-1">{request.notes}</p>
+                            </div>
+                          )}
+                          {request.adminNotes && (
+                            <div className="md:col-span-2">
+                              <span className="text-gray-600">ملاحظات الأدمن:</span>
+                              <p className="text-blue-900 text-xs mt-1">{request.adminNotes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <List className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p>لا توجد طلبات توزيع مرتبطة بهذا المستفيد</p>
+                </div>
+              )}
             </div>
           )}
         </div>

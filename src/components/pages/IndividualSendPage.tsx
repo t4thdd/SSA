@@ -5,11 +5,14 @@ import {
   mockBeneficiaries, 
   mockOrganizations, 
   mockPackageTemplates,
+  mockDistributionRequests,
   type Organization,
-  type PackageTemplate
+  type PackageTemplate,
+  type DistributionRequest
 } from '../../data/mockData';
 import { useErrorLogger } from '../../utils/errorLogger'; // Assuming errorLogger.ts is correctly imported
 import { Button, Card, Input, Badge, Modal } from '../ui';
+import { useAuth } from '../../context/AuthContext';
 import * as Sentry from '@sentry/react';
 
 interface IndividualSendPageProps {
@@ -18,6 +21,7 @@ interface IndividualSendPageProps {
 }
 
 export default function IndividualSendPage({ beneficiaryIdToPreselect, onBeneficiaryPreselected }: IndividualSendPageProps) {
+  const { loggedInUser } = useAuth();
   const { logInfo, logError } = useErrorLogger();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInstitution, setSelectedInstitution] = useState<string>('');
@@ -30,7 +34,7 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
   const [showConfirmSendModal, setShowConfirmSendModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [sendResults, setSendResults] = useState<any>(null);
+  const [requestResults, setRequestResults] = useState<any>(null);
   const [errorDetails, setErrorDetails] = useState<string>('');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'warning' | null } | null>(null);
 
@@ -87,7 +91,7 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
   const handleSendPackage = () => {
     if (!selectedBeneficiary || !selectedTemplate || !reason) {
       setNotification({ 
-        message: 'يرجى اختيار المستفيد ونوع الطرد وسبب الإرسال', 
+        message: 'يرجى اختيار المستفيد وقالب الطرد وسبب الإرسال', 
         type: 'error' 
       });
       setTimeout(() => setNotification(null), 3000);
@@ -97,43 +101,64 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
     setShowConfirmSendModal(true);
   };
 
-  const executeSendPackage = async () => {
+  const executeCreateRequest = async () => {
     setShowConfirmSendModal(false);
     
     try {
-      // محاكاة عملية الإرسال
+      // محاكاة عملية إنشاء طلب التوزيع
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // محاكاة احتمالية نجاح/فشل (95% نجاح)
-      const isSuccess = Math.random() > 0.05;
+      const newRequest: DistributionRequest = {
+        id: `req-${Date.now()}`,
+        requesterId: loggedInUser?.associatedId || loggedInUser?.id || '',
+        requesterType: loggedInUser?.associatedType === 'organization' ? 'organization' : 
+                      loggedInUser?.associatedType === 'family' ? 'family' : 'admin',
+        requesterName: loggedInUser?.name || 'مستخدم غير محدد',
+        requestDate: new Date().toISOString(),
+        status: 'pending',
+        type: 'individual',
+        packageTemplateId: selectedTemplate,
+        requestedQuantity: 1,
+        beneficiaryIds: [selectedBeneficiary!.id],
+        notes: `سبب الإرسال: ${reasons.find(r => r.id === reason)?.name}. ${notes ? `ملاحظات إضافية: ${notes}` : ''}`,
+        priority: priority as any,
+        estimatedCost: selectedTemplateData?.estimatedCost || 0,
+        estimatedDeliveryTime: priority === 'urgent' ? '6 ساعات' : 
+                              priority === 'high' ? '24 ساعة' : 
+                              priority === 'normal' ? '1-2 يوم' : '2-3 أيام'
+      };
       
-      if (isSuccess) {
-        const sendId = `IND-${Date.now().toString().slice(-6)}`;
-        const results = {
-          sendId,
-          beneficiaryName: selectedBeneficiary?.name,
-          templateName: selectedTemplateData?.name,
-          institutionName: institutions.find(inst => inst.id === selectedTemplateData?.organization_id)?.name,
-          reasonName: reasons.find(r => r.id === reason)?.name,
-          priorityText: priority === 'urgent' ? 'عاجلة' : priority === 'high' ? 'عالية' : priority === 'normal' ? 'عادية' : 'منخفضة',
-          estimatedCost: selectedTemplateData?.estimatedCost,
-          estimatedDeliveryTime: priority === 'urgent' ? '6 ساعات' : priority === 'high' ? '24 ساعة' : '1-2 يوم',
-          assignedCourier: 'محمد علي أبو عامر',
-          trackingNumber: `TRK-${Date.now().toString().slice(-8)}`
-        };
-        
-        setSendResults(results);
-        setShowSuccessModal(true);
-        logInfo(`تم إرسال طرد فردي: ${sendId}`, 'IndividualSendPage');
-      } else {
-        Sentry.captureMessage('فشل في الإرسال الفردي - لا يوجد مندوب متاح', 'warning');
-        setErrorDetails('فشل في تعيين مندوب متاح في المنطقة المحددة. يرجى المحاولة لاحقاً أو تغيير الأولوية إلى "عاجلة".');
-        setShowErrorModal(true);
-        logError(new Error('فشل في الإرسال الفردي'), 'IndividualSendPage');
-      }
+      // إضافة الطلب إلى البيانات الوهمية
+      mockDistributionRequests.unshift(newRequest);
+      
+      const results = {
+        requestId: newRequest.id,
+        beneficiaryName: selectedBeneficiary?.name,
+        templateName: selectedTemplateData?.name,
+        institutionName: institutions.find(inst => inst.id === selectedTemplateData?.organization_id)?.name,
+        reasonName: reasons.find(r => r.id === reason)?.name,
+        priorityText: priority === 'urgent' ? 'عاجلة' : priority === 'high' ? 'عالية' : priority === 'normal' ? 'عادية' : 'منخفضة',
+        estimatedCost: selectedTemplateData?.estimatedCost,
+        estimatedDeliveryTime: newRequest.estimatedDeliveryTime
+      };
+      
+      setRequestResults(results);
+      setShowSuccessModal(true);
+      
+      Sentry.addBreadcrumb({
+        message: 'Individual distribution request created',
+        category: 'distribution',
+        data: { 
+          requestId: newRequest.id, 
+          beneficiaryId: selectedBeneficiary!.id,
+          templateId: selectedTemplate
+        }
+      });
+      
+      logInfo(`تم إنشاء طلب توزيع فردي: ${newRequest.id}`, 'IndividualSendPage');
     } catch (error) {
       Sentry.captureException(error);
-      setErrorDetails('حدث خطأ تقني في النظام. يرجى المحاولة مرة أخرى.');
+      setErrorDetails('حدث خطأ تقني في إنشاء طلب التوزيع. يرجى المحاولة مرة أخرى.');
       setShowErrorModal(true);
       logError(error as Error, 'IndividualSendPage');
     }
@@ -596,26 +621,26 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 rows={3}
               />
             </div>
-          </div>
+        title="تأكيد إرسال طلب التوزيع الفردي"
         </Card>
       )}
 
       {/* Send Summary */}
-      {selectedBeneficiary && selectedTemplate && reason && (
+          <h3 className="text-xl font-bold text-gray-900 mb-4">هل أنت متأكد من إرسال طلب التوزيع؟</h3>
         <Card>
-          <h3 className="text-lg font-bold text-gray-900 mb-6">ملخص الطرد الفردي</h3>
+            سيتم إرسال طلب التوزيع إلى الأدمن للمراجعة والموافقة.
 
           <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-xl border border-green-200 mb-6">
             <div className="grid md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="bg-blue-100 p-3 rounded-xl mb-2">
+            <h4 className="font-semibold text-gray-900 mb-3">تفاصيل الطلب</h4>
                   <User className="w-6 h-6 text-blue-600 mx-auto" />
                 </div>
                 <p className="text-sm text-gray-600">المستفيد</p>
                 <p className="font-bold text-gray-900">{selectedBeneficiary.name}</p>
               </div>
 
-              <div className="text-center">
+                <span className="text-gray-600">قالب الطرد:</span>
                 <div className="bg-green-100 p-3 rounded-xl mb-2">
                   <Package className="w-6 h-6 text-green-600 mx-auto" />
                 </div>
@@ -635,7 +660,7 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 <div className="bg-orange-100 p-3 rounded-xl mb-2">
                   <Star className="w-6 h-6 text-orange-600 mx-auto" />
                 </div>
-                <p className="text-sm text-gray-600">التكلفة</p>
+                <span className="text-gray-600">التكلفة المقدرة:</span>
                 <p className="font-bold text-gray-900">{selectedTemplateData?.estimatedCost} ₪</p>
               </div>
             </div>
@@ -709,8 +734,8 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 <li className="flex items-start space-x-2 space-x-reverse">
                   <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                   <span>سيتم تعيين أفضل مندوب متاح حسب المنطقة</span>
-                </li>
-              </ul>
+            <Button variant="primary" onClick={executeCreateRequest}>
+              إرسال الطلب
             </div>
           </div>
         </div>
@@ -779,66 +804,58 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
       )}
 
       {/* Success Modal */}
-      {showSuccessModal && sendResults && (
+      {showSuccessModal && requestResults && (
         <Modal
           isOpen={showSuccessModal}
           onClose={() => {
             setShowSuccessModal(false);
             resetForm();
           }}
-          title="تم الإرسال بنجاح!"
+          title="تم إرسال طلب التوزيع بنجاح!"
           size="md"
         >
           <div className="p-6 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-4">تم إرسال الطرد الفردي بنجاح!</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">تم إرسال طلب التوزيع الفردي بنجاح!</h3>
             <p className="text-gray-600 mb-6">
-              تم إنشاء مهمة التوزيع وسيتم إشعار المستفيد قريباً.
+              تم إرسال طلبك إلى الأدمن للمراجعة. ستتلقى إشعاراً عند اتخاذ قرار بشأن الطلب.
             </p>
             
-            {/* Send Results */}
+            {/* Request Results */}
             <div className="bg-green-50 p-4 rounded-lg mb-6">
-              <h4 className="font-semibold text-green-800 mb-3">تفاصيل الإرسالية</h4>
+              <h4 className="font-semibold text-green-800 mb-3">تفاصيل الطلب المرسل</h4>
               <div className="grid md:grid-cols-2 gap-4 text-sm text-right">
                 <div>
-                  <span className="text-green-700">رقم الإرسالية:</span>
-                  <span className="font-mono font-bold text-green-900 mr-2">{sendResults.sendId}</span>
-                </div>
-                <div>
-                  <span className="text-green-700">رقم التتبع:</span>
-                  <span className="font-mono font-bold text-green-900 mr-2">{sendResults.trackingNumber}</span>
+                  <span className="text-green-700">رقم الطلب:</span>
+                  <span className="font-mono font-bold text-green-900 mr-2">{requestResults.requestId}</span>
                 </div>
                 <div>
                   <span className="text-green-700">المستفيد:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.beneficiaryName}</span>
+                  <span className="font-medium text-green-900 mr-2">{requestResults.beneficiaryName}</span>
                 </div>
                 <div>
-                  <span className="text-green-700">نوع الطرد:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.templateName}</span>
+                  <span className="text-green-700">قالب الطرد:</span>
+                  <span className="font-medium text-green-900 mr-2">{requestResults.templateName}</span>
                 </div>
                 <div>
                   <span className="text-green-700">المؤسسة:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.institutionName}</span>
+                  <span className="font-medium text-green-900 mr-2">{requestResults.institutionName}</span>
                 </div>
                 <div>
                   <span className="text-green-700">السبب:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.reasonName}</span>
+                  <span className="font-medium text-green-900 mr-2">{requestResults.reasonName}</span>
                 </div>
                 <div>
                   <span className="text-green-700">الأولوية:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.priorityText}</span>
-                </div>
-                <div>
-                  <span className="text-green-700">وقت التسليم المتوقع:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.estimatedDeliveryTime}</span>
-                </div>
-                <div>
-                  <span className="text-green-700">المندوب المعين:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.assignedCourier}</span>
+                  <span className="font-medium text-green-900 mr-2">{requestResults.priorityText}</span>
                 </div>
                 <div>
                   <span className="text-green-700">التكلفة:</span>
-                  <span className="font-medium text-green-900 mr-2">{sendResults.estimatedCost} ₪</span>
+                  <span className="font-medium text-green-900 mr-2">{requestResults.estimatedCost} ₪</span>
+                </div>
+                <div>
+                  <span className="text-green-700">الوقت المقدر للتنفيذ:</span>
+                  <span className="font-medium text-green-900 mr-2">{requestResults.estimatedDeliveryTime}</span>
                 </div>
               </div>
             </div>
@@ -849,10 +866,11 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 <span className="font-medium">الخطوات التالية:</span>
               </div>
               <ul className="text-sm text-blue-700 space-y-1 text-right">
-                <li>• سيتم إشعار المستفيد برسالة نصية تحتوي على رقم التتبع</li>
-                <li>• سيتم تعيين المندوب وتحديد موعد التسليم</li>
-                <li>• يمكنك متابعة حالة الطرد من صفحة "تتبع الإرسالات"</li>
-                <li>• ستصلك تنبيهات عند تحديث حالة التسليم</li>
+                <li>• سيقوم الأدمن بمراجعة طلبك خلال 24 ساعة</li>
+                <li>• سيتم اختيار المندوب المناسب للمنطقة</li>
+                <li>• ستتلقى إشعاراً فور اتخاذ قرار بشأن الطلب</li>
+                <li>• يمكنك متابعة حالة الطلب من لوحة التحكم</li>
+                <li>• سيتم إشعار المستفيد عند بدء التوزيع الفعلي</li>
               </ul>
             </div>
 
@@ -861,7 +879,7 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 setShowSuccessModal(false);
                 resetForm();
               }}>
-                إرسال طرد آخر
+                إنشاء طلب آخر
               </Button>
               <Button variant="primary" onClick={() => {
                 setShowSuccessModal(false);
@@ -879,14 +897,14 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
         <Modal
           isOpen={showErrorModal}
           onClose={() => setShowErrorModal(false)}
-          title="فشل في الإرسال"
+          title="فشل في إرسال الطلب"
           size="md"
         >
           <div className="p-6 text-center">
             <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-4">فشل في إرسال الطرد</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">فشل في إرسال طلب التوزيع</h3>
             <p className="text-gray-600 mb-6">
-              عذراً، لم نتمكن من إرسال الطرد في الوقت الحالي.
+              عذراً، لم نتمكن من إرسال طلب التوزيع في الوقت الحالي.
             </p>
             
             {/* Error Details */}
@@ -901,25 +919,25 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
                 <span className="font-medium">الحلول المقترحة:</span>
               </div>
               <ul className="text-sm text-blue-700 space-y-1 text-right">
-                <li>• جرب تغيير الأولوية إلى "عاجلة" لتوفير مندوبين إضافيين</li>
+          <span>سيتم إرسال الطلب إلى الأدمن للمراجعة والموافقة</span>
                 <li>• تأكد من صحة عنوان المستفيد</li>
                 <li>• حاول مرة أخرى خلال ساعة</li>
                 <li>• تواصل مع فريق الدعم إذا استمرت المشكلة</li>
-              </ul>
+          <span>الأدمن سيختار المندوب المناسب للمنطقة</span>
             </div>
 
             <div className="flex space-x-3 space-x-reverse justify-center">
               <Button variant="secondary" onClick={() => setShowErrorModal(false)}>
                 إغلاق
-              </Button>
+          <span>ستتلقى إشعاراً عند الموافقة أو الرفض</span>
               <Button variant="primary" onClick={() => {
                 setShowErrorModal(false);
-                setPriority('urgent');
-              }}>
-                تغيير الأولوية ومحاولة مرة أخرى
+                handleSendPackage();
+          <span>يمكن تتبع حالة الطلب من لوحة التحكم</span>
+                محاولة مرة أخرى
               </Button>
             </div>
-          </div>
+          <span>الطلبات العاجلة لها أولوية في المعالجة</span>
         </Modal>
       )}
     </div>
