@@ -158,6 +158,7 @@ export interface Courier {
   rating: number;
   completedTasks: number;
   currentLocation?: { lat: number; lng: number };
+  serviceAreas: string[]; // Districts/areas this courier serves
   isHumanitarianApproved: boolean;
 }
 
@@ -166,6 +167,7 @@ export interface Task {
   packageId: string;
   beneficiaryId: string;
   courierId?: string;
+  distributionRequestId?: string;
   status: 'pending' | 'assigned' | 'in_progress' | 'delivered' | 'failed' | 'rescheduled';
   createdAt: string;
   scheduledAt?: string;
@@ -179,6 +181,53 @@ export interface Task {
   remainingDistance?: number;
   photoUrl?: string;
   failureReason?: string;
+}
+
+export interface DistributionRequest {
+  id: string;
+  requesterId: string; // ID of the organization/family/admin user who created the request
+  requesterType: 'organization' | 'family' | 'admin';
+  requesterName: string; // Name of the requester for display
+  requestDate: string; // ISO string
+  status: 'pending' | 'approved' | 'rejected' | 'in_progress' | 'completed';
+  type: 'individual' | 'bulk' | 'family_bulk'; // Individual, Bulk by region, or Bulk for a family
+  packageTemplateId: string; // ID of the package template requested
+  requestedQuantity: number; // Quantity requested by the originator
+  approvedQuantity?: number; // Quantity approved by admin (can be less than requested)
+  targetGovernorate?: string; // For bulk requests
+  targetCity?: string; // For bulk requests
+  targetDistrict?: string; // For bulk requests
+  beneficiaryIds?: string[]; // For individual or family_bulk requests
+  notes?: string;
+  adminNotes?: string;
+  approvedBy?: string; // Admin user ID
+  approvalDate?: string; // ISO string
+  rejectionReason?: string; // Reason for rejection
+  assignedCourierId?: string; // Courier assigned by admin for the request
+  generatedTaskIds?: string[]; // IDs of tasks generated from this request
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  estimatedCost?: number; // Based on package template and quantity
+  estimatedDeliveryTime?: string; // Expected completion time
+}
+
+export interface Governorate {
+  id: number;
+  name: string;
+  cities: City[];
+}
+
+export interface City {
+  id: number;
+  name: string;
+  governorate_id: number;
+  districts: District[];
+}
+
+export interface District {
+  id: number;
+  name: string;
+  city_id: number;
+  ratio: number;
 }
 
 export interface ActivityLog {
@@ -293,6 +342,11 @@ const courier3Id = uuidv4();
 const task1Id = uuidv4();
 const task2Id = uuidv4();
 const task3Id = uuidv4();
+
+const distributionRequest1Id = uuidv4();
+const distributionRequest2Id = uuidv4();
+const distributionRequest3Id = uuidv4();
+const distributionRequest4Id = uuidv4();
 
 const alert1Id = uuidv4();
 const alert2Id = uuidv4();
@@ -893,6 +947,7 @@ export const mockCouriers: Courier[] = [
     rating: 4.8,
     completedTasks: 156,
     currentLocation: { lat: 31.3469, lng: 34.3029 },
+    serviceAreas: ['الكتيبة', 'المعسكر', 'حي الأمل'],
     isHumanitarianApproved: true
   },
   {
@@ -904,6 +959,7 @@ export const mockCouriers: Courier[] = [
     rating: 4.6,
     completedTasks: 89,
     currentLocation: { lat: 31.3200, lng: 34.3500 },
+    serviceAreas: ['عبسان الكبيرة', 'عبسان الصغيرة'],
     isHumanitarianApproved: true
   },
   {
@@ -915,7 +971,211 @@ export const mockCouriers: Courier[] = [
     rating: 4.9,
     completedTasks: 234,
     currentLocation: { lat: 31.3100, lng: 34.3800 },
+    serviceAreas: ['خزاعة', 'الفخاري', 'بني سهيلا'],
     isHumanitarianApproved: true
+  }
+];
+
+// Mock Distribution Requests Data
+export const mockDistributionRequests: DistributionRequest[] = [
+  {
+    id: distributionRequest1Id,
+    requesterId: userSupervisorId,
+    requesterType: 'organization',
+    requesterName: 'فاطمة أحمد - الهلال الأحمر',
+    requestDate: '2024-12-21T08:30:00',
+    status: 'pending',
+    type: 'bulk',
+    packageTemplateId: mockPackageTemplates[0].id,
+    requestedQuantity: 150,
+    targetGovernorate: 'خان يونس',
+    targetCity: 'خان يونس',
+    targetDistrict: 'الكتيبة',
+    notes: 'طلب توزيع طرود رمضان كريم في منطقة الكتيبة - خان يونس',
+    priority: 'high',
+    estimatedCost: 150 * 50, // 150 طرد × 50 شيكل
+    estimatedDeliveryTime: '2-3 أيام'
+  },
+  {
+    id: distributionRequest2Id,
+    requesterId: uuidv4(),
+    requesterType: 'organization',
+    requesterName: 'د. فاطمة الغزاوي - أطباء بلا حدود',
+    requestDate: '2024-12-21T10:15:00',
+    status: 'pending',
+    type: 'bulk',
+    packageTemplateId: mockPackageTemplates[2].id, // الطرد الطبي
+    requestedQuantity: 80,
+    targetGovernorate: 'خان يونس',
+    targetCity: 'خان يونس',
+    targetDistrict: 'عبسان الكبيرة',
+    notes: 'طلب توزيع طرود إسعافات أولية في منطقة عبسان الكبيرة',
+    priority: 'urgent',
+    estimatedCost: 80 * 30, // 80 طرد × 30 شيكل
+    estimatedDeliveryTime: '1-2 يوم'
+  },
+  {
+    id: distributionRequest3Id,
+    requesterId: uuidv4(),
+    requesterType: 'family',
+    requesterName: 'محمد أبو عامر - عائلة آل أبو عامر',
+    requestDate: '2024-12-21T14:45:00',
+    status: 'approved',
+    type: 'family_bulk',
+    packageTemplateId: mockPackageTemplates[1].id, // طرد الشتاء
+    requestedQuantity: 12,
+    approvedQuantity: 10,
+    beneficiaryIds: [beneficiary1Id, beneficiary3Id, beneficiary4Id],
+    notes: 'طلب توزيع طرود شتوية لأفراد العائلة',
+    adminNotes: 'تم تقليل الكمية إلى 10 طرود حسب المخزون المتاح',
+    approvedBy: userAdminId,
+    approvalDate: '2024-12-21T15:30:00',
+    assignedCourierId: courier1Id,
+    priority: 'normal',
+    estimatedCost: 10 * 75, // 10 طرد × 75 شيكل
+    estimatedDeliveryTime: '1-2 يوم',
+    generatedTaskIds: [task1Id, task2Id]
+  },
+  {
+    id: distributionRequest4Id,
+    requesterId: userSupervisorId,
+    requesterType: 'organization',
+    requesterName: 'خالد أبو يوسف - الإغاثة الإسلامية',
+    requestDate: '2024-12-20T16:20:00',
+    status: 'rejected',
+    type: 'individual',
+    packageTemplateId: mockPackageTemplates[0].id,
+    requestedQuantity: 1,
+    beneficiaryIds: [beneficiary5Id],
+    notes: 'طلب طرد فردي لحالة طارئة',
+    adminNotes: 'تم الرفض - المستفيد حصل على طرد مؤخراً',
+    rejectionReason: 'المستفيد استلم طرداً خلال آخر 15 يوم',
+    approvedBy: userAdminId,
+    approvalDate: '2024-12-20T17:00:00',
+    priority: 'urgent',
+    estimatedCost: 1 * 50
+  }
+];
+
+// Mock Geographic Data based on all_cities.json
+export const mockGovernorates: Governorate[] = [
+  {
+    id: 1,
+    name: 'شمال غزة',
+    cities: [
+      {
+        id: 38,
+        name: 'معسكر جباليا',
+        governorate_id: 1,
+        districts: [
+          { id: 1001, name: 'جباليا النزلة', city_id: 38, ratio: 6 },
+          { id: 1002, name: 'جباليا الشمالية', city_id: 38, ratio: 6 }
+        ]
+      },
+      {
+        id: 39,
+        name: 'جباليا البلد',
+        governorate_id: 1,
+        districts: [
+          { id: 1003, name: 'جباليا البلد الشرقية', city_id: 39, ratio: 6 },
+          { id: 1004, name: 'جباليا البلد الغربية', city_id: 39, ratio: 6 }
+        ]
+      },
+      {
+        id: 40,
+        name: 'بيت حانون',
+        governorate_id: 1,
+        districts: [
+          { id: 1005, name: 'بيت حانون الشرقية', city_id: 40, ratio: 6 },
+          { id: 1006, name: 'بيت حانون الغربية', city_id: 40, ratio: 6 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 4,
+    name: 'خان يونس',
+    cities: [
+      {
+        id: 13,
+        name: 'منطقة البلد',
+        governorate_id: 4,
+        districts: [
+          { id: 4001, name: 'الكتيبة', city_id: 13, ratio: 8 },
+          { id: 4002, name: 'المعسكر', city_id: 13, ratio: 8 },
+          { id: 4003, name: 'حي الأمل', city_id: 13, ratio: 8 }
+        ]
+      },
+      {
+        id: 14,
+        name: 'منطقة معن',
+        governorate_id: 4,
+        districts: [
+          { id: 4004, name: 'عبسان الكبيرة', city_id: 14, ratio: 8 },
+          { id: 4005, name: 'عبسان الصغيرة', city_id: 14, ratio: 8 }
+        ]
+      },
+      {
+        id: 15,
+        name: 'المنطقة الشرقية',
+        governorate_id: 4,
+        districts: [
+          { id: 4006, name: 'خزاعة', city_id: 15, ratio: 3 },
+          { id: 4007, name: 'الفخاري', city_id: 15, ratio: 3 }
+        ]
+      },
+      {
+        id: 16,
+        name: 'منطقة القرارة',
+        governorate_id: 4,
+        districts: [
+          { id: 4008, name: 'القرارة الشرقية', city_id: 16, ratio: 3 },
+          { id: 4009, name: 'القرارة الغربية', city_id: 16, ratio: 3 }
+        ]
+      },
+      {
+        id: 17,
+        name: 'منطقة السطر واصداء',
+        governorate_id: 4,
+        districts: [
+          { id: 4010, name: 'بني سهيلا', city_id: 17, ratio: 12 },
+          { id: 4011, name: 'الشوكة', city_id: 17, ratio: 12 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 6,
+    name: 'رفح',
+    cities: [
+      {
+        id: 43,
+        name: 'المواصي',
+        governorate_id: 6,
+        districts: [
+          { id: 6001, name: 'المواصي الشرقية', city_id: 43, ratio: 0 },
+          { id: 6002, name: 'المواصي الغربية', city_id: 43, ratio: 0 }
+        ]
+      },
+      {
+        id: 45,
+        name: 'حي الزهور',
+        governorate_id: 6,
+        districts: [
+          { id: 6003, name: 'الزهور الشمالية', city_id: 45, ratio: 0 },
+          { id: 6004, name: 'الزهور الجنوبية', city_id: 45, ratio: 0 }
+        ]
+      },
+      {
+        id: 62,
+        name: 'تل السلطان',
+        governorate_id: 6,
+        districts: [
+          { id: 6005, name: 'تل السلطان الشرقية', city_id: 62, ratio: 0 },
+          { id: 6006, name: 'تل السلطان الغربية', city_id: 62, ratio: 0 }
+        ]
+      }
+    ]
   }
 ];
 
@@ -925,6 +1185,7 @@ export const mockTasks: Task[] = [
     packageId: package1Id,
     beneficiaryId: beneficiary1Id,
     courierId: courier1Id,
+    distributionRequestId: distributionRequest3Id,
     status: 'delivered',
     createdAt: '2024-12-20',
     scheduledAt: '2024-12-20',
@@ -940,6 +1201,7 @@ export const mockTasks: Task[] = [
     packageId: package2Id,
     beneficiaryId: beneficiary2Id,
     courierId: courier2Id,
+    distributionRequestId: distributionRequest3Id,
     status: 'in_progress',
     createdAt: '2024-12-19',
     scheduledAt: '2024-12-21',
@@ -1266,6 +1528,64 @@ export const getTemplateById = (id: string): PackageTemplate | undefined => {
   return mockPackageTemplates.find(template => template.id === id);
 };
 
+// Helper functions for Distribution Requests
+export const getDistributionRequestById = (id: string): DistributionRequest | undefined => {
+  return mockDistributionRequests.find(request => request.id === id);
+};
+
+export const getDistributionRequestsByStatus = (status: DistributionRequest['status']): DistributionRequest[] => {
+  return mockDistributionRequests.filter(request => request.status === status);
+};
+
+export const getDistributionRequestsByRequester = (requesterId: string): DistributionRequest[] => {
+  return mockDistributionRequests.filter(request => request.requesterId === requesterId);
+};
+
+export const getPendingDistributionRequests = (): DistributionRequest[] => {
+  return mockDistributionRequests.filter(request => request.status === 'pending');
+};
+
+// Helper functions for Geographic Data
+export const getGovernorateById = (id: number): Governorate | undefined => {
+  return mockGovernorates.find(gov => gov.id === id);
+};
+
+export const getCitiesByGovernorate = (governorateId: number): City[] => {
+  const governorate = mockGovernorates.find(gov => gov.id === governorateId);
+  return governorate ? governorate.cities : [];
+};
+
+export const getDistrictsByCity = (cityId: number): District[] => {
+  for (const governorate of mockGovernorates) {
+    const city = governorate.cities.find(c => c.id === cityId);
+    if (city) {
+      return city.districts;
+    }
+  }
+  return [];
+};
+
+export const getCouriersByServiceArea = (district: string): Courier[] => {
+  return mockCouriers.filter(courier => 
+    courier.serviceAreas.includes(district) && courier.status === 'active'
+  );
+};
+
+export const getBeneficiariesByArea = (governorate?: string, city?: string, district?: string): Beneficiary[] => {
+  return mockBeneficiaries.filter(beneficiary => {
+    if (governorate && !beneficiary.detailedAddress.governorate.includes(governorate)) {
+      return false;
+    }
+    if (city && !beneficiary.detailedAddress.city.includes(city)) {
+      return false;
+    }
+    if (district && !beneficiary.detailedAddress.district.includes(district)) {
+      return false;
+    }
+    return true;
+  });
+};
+
 // Statistics calculations
 export const calculateStats = () => {
   const totalBeneficiaries = mockBeneficiaries.length;
@@ -1274,12 +1594,17 @@ export const calculateStats = () => {
   const activeTasks = mockTasks.filter(t => ['pending', 'assigned', 'in_progress'].includes(t.status)).length;
   const criticalAlerts = getCriticalAlerts().length;
   
+  const pendingRequests = getPendingDistributionRequests().length;
+  const approvedRequests = mockDistributionRequests.filter(r => r.status === 'approved').length;
+  
   return {
     totalBeneficiaries,
     totalPackages,
     deliveredPackages,
     activeTasks,
     criticalAlerts,
+    pendingRequests,
+    approvedRequests,
     deliveryRate: totalPackages > 0 ? Math.round((deliveredPackages / totalPackages) * 100) : 0
   };
 };
