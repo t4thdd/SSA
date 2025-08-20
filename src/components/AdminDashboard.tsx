@@ -6,10 +6,10 @@ import { useAlerts } from '../context/AlertsContext';
 import { useErrorLogger } from '../utils/errorLogger';
 import { statisticsService, alertsService } from '../services/supabaseService';
 import * as Sentry from '@sentry/react';
-import { Shield, Users, Package, Truck, Bell, BarChart3, Settings, MapPin, Calendar, FileText, AlertTriangle, CheckCircle, Clock, Plus, Search, Filter, Download, Eye, Edit, Phone, Star, UserPlus, Building2, Heart, TrendingUp, Activity, Database, MessageSquare, UserCheck, Crown, Key, Lock, ChevronRight, RefreshCw, LogOut } from 'lucide-react';
-import { mockBeneficiaries, mockPackages, calculateStats, mockOrganizations, mockFamilies } from '../data/mockData';
+import { Shield, Users, Package, Truck, Bell, BarChart3, Settings, MapPin, Calendar, FileText, AlertTriangle, CheckCircle, Clock, Plus, Search, Filter, Download, Eye, Edit, Phone, Star, UserPlus, Building2, Heart, TrendingUp, Activity, Database, MessageSquare, UserCheck, Crown, Key, Lock, ChevronRight, RefreshCw, LogOut, ClipboardList, XCircle } from 'lucide-react';
+import { mockBeneficiaries, mockPackages, calculateStats, mockOrganizations, mockFamilies, mockDistributionRequests, getPendingDistributionRequests, type DistributionRequest } from '../data/mockData';
 import PermissionsManagement from './PermissionsManagement';
-import { Button, Card, StatCard, Badge } from './ui';
+import { Button, Card, StatCard, Badge, Input } from './ui';
 
 // Import new page components
 import BeneficiariesListPage from './pages/BeneficiariesListPage';
@@ -33,6 +33,7 @@ import BackupManagementPage from './pages/BackupManagementPage';
 import FamiliesDashboard from './FamiliesDashboard';
 import MessagesSettingsPage from './pages/MessagesSettingsPage';
 import GazaMap, { type MapPoint } from './GazaMap';
+import DistributionRequestReview from './DistributionRequestReview';
 
 interface NavItem {
   id: string;
@@ -56,6 +57,8 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [openMenus, setOpenMenus] = useState<string[]>(['beneficiaries', 'packages', 'organizations-families', 'distribution', 'reports-alerts', 'settings', 'development']);
   const [beneficiaryIdForIndividualSend, setBeneficiaryIdForIndividualSend] = useState<string | null>(null);
+  const [selectedDistributionRequest, setSelectedDistributionRequest] = useState<DistributionRequest | null>(null);
+  const [showDistributionReview, setShowDistributionReview] = useState(false);
 
   // State for Supabase data
   const [stats, setStats] = useState<any>(calculateStats());
@@ -63,6 +66,8 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
   const [statsError, setStatsError] = useState<string | null>(null);
   const [selectedBeneficiaryForMap, setSelectedBeneficiaryForMap] = useState<any>(null);
   const [showMapModal, setShowMapModal] = useState(false);
+
+  const pendingRequests = getPendingDistributionRequests();
 
   // Fetch data from Supabase
   useEffect(() => {
@@ -79,6 +84,59 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
   const handleNavigateToIndividualSend = (beneficiaryId: string) => {
     setBeneficiaryIdForIndividualSend(beneficiaryId);
     setActiveTab('individual-send');
+  };
+
+  const handleReviewDistributionRequest = (request: DistributionRequest) => {
+    setSelectedDistributionRequest(request);
+    setShowDistributionReview(true);
+  };
+
+  const handleApproveDistributionRequest = (requestId: string, approvedQuantity: number, courierId: string, adminNotes?: string) => {
+    // محاكاة الموافقة على طلب التوزيع
+    const requestIndex = mockDistributionRequests.findIndex(r => r.id === requestId);
+    if (requestIndex !== -1) {
+      mockDistributionRequests[requestIndex] = {
+        ...mockDistributionRequests[requestIndex],
+        status: 'approved',
+        approvedQuantity,
+        assignedCourierId: courierId,
+        adminNotes,
+        approvedBy: loggedInUser?.id || 'admin',
+        approvalDate: new Date().toISOString()
+      };
+
+      // محاكاة إنشاء مهام التسليم
+      const newTaskIds: string[] = [];
+      for (let i = 0; i < approvedQuantity; i++) {
+        const taskId = `task-${Date.now()}-${i}`;
+        newTaskIds.push(taskId);
+        // في التطبيق الحقيقي، سيتم إنشاء مهام فعلية هنا
+      }
+      
+      mockDistributionRequests[requestIndex].generatedTaskIds = newTaskIds;
+      
+      alert(`تمت الموافقة على الطلب وتم إنشاء ${approvedQuantity} مهمة تسليم`);
+      setShowDistributionReview(false);
+      setSelectedDistributionRequest(null);
+    }
+  };
+
+  const handleRejectDistributionRequest = (requestId: string, rejectionReason: string) => {
+    // محاكاة رفض طلب التوزيع
+    const requestIndex = mockDistributionRequests.findIndex(r => r.id === requestId);
+    if (requestIndex !== -1) {
+      mockDistributionRequests[requestIndex] = {
+        ...mockDistributionRequests[requestIndex],
+        status: 'rejected',
+        rejectionReason,
+        approvedBy: loggedInUser?.id || 'admin',
+        approvalDate: new Date().toISOString()
+      };
+      
+      alert(`تم رفض الطلب: ${rejectionReason}`);
+      setShowDistributionReview(false);
+      setSelectedDistributionRequest(null);
+    }
   };
 
   // تحويل بيانات المستفيدين إلى نقاط خريطة
@@ -139,6 +197,7 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
         { id: 'bulk-send', name: 'إرسال جماعي', icon: Users },
         { id: 'individual-send', name: 'إرسال فردي', icon: UserPlus },
         { id: 'tracking', name: 'تتبع الإرسالات', icon: Truck },
+        { id: 'distribution-requests', name: 'طلبات التوزيع', icon: ClipboardList },
         { id: 'distribution-reports', name: 'تقارير التوزيع', icon: BarChart3 }
       ]
     },
@@ -487,6 +546,25 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
       );
     }
 
+    if (activeTab === 'distribution-requests') {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center space-x-4 space-x-reverse">
+            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+              <IconComponent className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900">{pageInfo.name}</h2>
+              <p className="text-gray-600 mt-1">{pageInfo.description}</p>
+            </div>
+          </div>
+          <DistributionRequestsManagementPage 
+            onReviewRequest={handleReviewDistributionRequest}
+          />
+        </div>
+      );
+    }
+
     if (activeTab === 'distribution-reports') {
       return (
         <div className="space-y-6">
@@ -727,6 +805,18 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
                     label: ''
                   }}
                   color="purple"
+                />
+
+                <StatCard
+                  title="طلبات التوزيع المعلقة"
+                  value={stats?.pendingRequests || 0}
+                  icon={ClipboardList}
+                  trend={{
+                    value: `${stats?.approvedRequests || 0} معتمد`,
+                    direction: 'up',
+                    label: ''
+                  }}
+                  color="blue"
                 />
               </>
             ) : (
@@ -1296,6 +1386,25 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
         </div>
       )}
 
+      {/* Distribution Request Review Modal */}
+      {showDistributionReview && selectedDistributionRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" dir="rtl">
+          <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+            <div className="p-6">
+              <DistributionRequestReview
+                request={selectedDistributionRequest}
+                onApprove={handleApproveDistributionRequest}
+                onReject={handleRejectDistributionRequest}
+                onClose={() => {
+                  setShowDistributionReview(false);
+                  setSelectedDistributionRequest(null);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <main className="flex-1 p-6">
@@ -1304,6 +1413,431 @@ export default function AdminDashboard({ activeTab, setActiveTab }: AdminDashboa
           </ErrorBoundary>
         </main>
       </div>
+    </div>
+  );
+}
+
+// مكون إدارة طلبات التوزيع
+interface DistributionRequestsManagementPageProps {
+  onReviewRequest: (request: DistributionRequest) => void;
+}
+
+function DistributionRequestsManagementPage({ onReviewRequest }: DistributionRequestsManagementPageProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+
+  const filteredRequests = mockDistributionRequests.filter(request => {
+    const matchesSearch = request.requesterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+    const matchesType = typeFilter === 'all' || request.type === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'معلق';
+      case 'approved': return 'معتمد';
+      case 'rejected': return 'مرفوض';
+      case 'in_progress': return 'قيد التنفيذ';
+      case 'completed': return 'مكتمل';
+      default: return 'غير محدد';
+    }
+  };
+
+  const getTypeText = (type: string) => {
+    switch (type) {
+      case 'individual': return 'فردي';
+      case 'bulk': return 'جماعي';
+      case 'family_bulk': return 'عائلي';
+      default: return 'غير محدد';
+    }
+  };
+
+  const getTemplateById = (id: string) => {
+    return mockPackages.find(p => p.id === id);
+  };
+
+  const getRequestTypeIcon = (type: string) => {
+    switch (type) {
+      case 'individual': return <Users className="w-4 h-4 text-blue-600" />;
+      case 'bulk': return <Package className="w-4 h-4 text-green-600" />;
+      case 'family_bulk': return <Heart className="w-4 h-4 text-purple-600" />;
+      default: return <Package className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  const getRequesterTypeIcon = (type: string) => {
+    switch (type) {
+      case 'organization': return <Building2 className="w-4 h-4 text-blue-600" />;
+      case 'family': return <Heart className="w-4 h-4 text-purple-600" />;
+      case 'admin': return <Shield className="w-4 h-4 text-green-600" />;
+      default: return <Users className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  const getPriorityText = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'عاجل';
+      case 'high': return 'عالي';
+      case 'normal': return 'عادي';
+      case 'low': return 'منخفض';
+      default: return 'غير محدد';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Data Source Indicator */}
+      <Card className="bg-blue-50 border-blue-200" padding="sm">
+        <div className="flex items-center space-x-2 space-x-reverse text-blue-600">
+          <CheckCircle className="w-4 h-4" />
+          <span className="text-sm font-medium">
+            البيانات الوهمية محملة - {mockDistributionRequests.length} طلب توزيع
+          </span>
+        </div>
+      </Card>
+
+      {/* Actions Bar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">طلبات التوزيع</h2>
+          <p className="text-gray-600 mt-1">مراجعة والموافقة على طلبات التوزيع من المؤسسات والعائلات</p>
+        </div>
+        <div className="flex space-x-3 space-x-reverse">
+          <Button variant="secondary" icon={Download} iconPosition="right">
+            تصدير الطلبات
+          </Button>
+          <Button variant="primary" icon={RefreshCw} iconPosition="right">
+            تحديث البيانات
+          </Button>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <Card>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Input
+            type="text"
+            icon={Search}
+            iconPosition="right"
+            placeholder="البحث في طلبات التوزيع..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">حالة الطلب</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">جميع الحالات</option>
+              <option value="pending">معلق</option>
+              <option value="approved">معتمد</option>
+              <option value="rejected">مرفوض</option>
+              <option value="in_progress">قيد التنفيذ</option>
+              <option value="completed">مكتمل</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">نوع الطلب</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">جميع الأنواع</option>
+              <option value="individual">فردي</option>
+              <option value="bulk">جماعي</option>
+              <option value="family_bulk">عائلي</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-yellow-50">
+          <div className="text-center">
+            <div className="bg-yellow-100 p-3 rounded-xl mb-2">
+              <Clock className="w-6 h-6 text-yellow-600 mx-auto" />
+            </div>
+            <p className="text-sm text-yellow-600">طلبات معلقة</p>
+            <p className="text-2xl font-bold text-yellow-900">
+              {mockDistributionRequests.filter(r => r.status === 'pending').length}
+            </p>
+          </div>
+        </Card>
+
+        <Card className="bg-green-50">
+          <div className="text-center">
+            <div className="bg-green-100 p-3 rounded-xl mb-2">
+              <CheckCircle className="w-6 h-6 text-green-600 mx-auto" />
+            </div>
+            <p className="text-sm text-green-600">طلبات معتمدة</p>
+            <p className="text-2xl font-bold text-green-900">
+              {mockDistributionRequests.filter(r => r.status === 'approved').length}
+            </p>
+          </div>
+        </Card>
+
+        <Card className="bg-red-50">
+          <div className="text-center">
+            <div className="bg-red-100 p-3 rounded-xl mb-2">
+              <XCircle className="w-6 h-6 text-red-600 mx-auto" />
+            </div>
+            <p className="text-sm text-red-600">طلبات مرفوضة</p>
+            <p className="text-2xl font-bold text-red-900">
+              {mockDistributionRequests.filter(r => r.status === 'rejected').length}
+            </p>
+          </div>
+        </Card>
+
+        <Card className="bg-blue-50">
+          <div className="text-center">
+            <div className="bg-blue-100 p-3 rounded-xl mb-2">
+              <Package className="w-6 h-6 text-blue-600 mx-auto" />
+            </div>
+            <p className="text-sm text-blue-600">إجمالي الطرود المطلوبة</p>
+            <p className="text-2xl font-bold text-blue-900">
+              {mockDistributionRequests.reduce((sum, r) => sum + r.requestedQuantity, 0)}
+            </p>
+          </div>
+        </Card>
+      </div>
+
+      {/* Pending Requests Alert */}
+      {pendingRequests.length > 0 && (
+        <Card className="bg-orange-50 border-orange-200">
+          <div className="flex items-center space-x-3 space-x-reverse">
+            <AlertTriangle className="w-6 h-6 text-orange-600" />
+            <div>
+              <h4 className="font-medium text-orange-800">
+                يوجد {pendingRequests.length} طلب توزيع في انتظار المراجعة
+              </h4>
+              <p className="text-orange-700 text-sm mt-1">
+                يرجى مراجعة الطلبات المعلقة والموافقة عليها أو رفضها
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Distribution Requests Table */}
+      <Card padding="none" className="overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              قائمة طلبات التوزيع ({filteredRequests.length})
+            </h3>
+            <div className="flex items-center space-x-2 space-x-reverse text-blue-600">
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-sm">البيانات الوهمية</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  الطلب
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  مقدم الطلب
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  النوع
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  الكمية
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  المنطقة
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  الحالة
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  التاريخ
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  الإجراءات
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredRequests.length > 0 ? (
+                filteredRequests.map((request) => {
+                  const packageTemplate = getTemplateById(request.packageTemplateId);
+                  
+                  return (
+                    <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="bg-blue-100 p-2 rounded-lg ml-4">
+                            {getRequestTypeIcon(request.type)}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {packageTemplate?.name || 'قالب غير محدد'}
+                            </div>
+                            <div className="text-sm text-gray-500">#{request.id.slice(-8)}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          {getRequesterTypeIcon(request.requesterType)}
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {request.requesterName}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {request.requesterType === 'organization' ? 'مؤسسة' :
+                               request.requesterType === 'family' ? 'عائلة' : 'إدارة'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <Badge variant={
+                            request.type === 'bulk' ? 'info' :
+                            request.type === 'family_bulk' ? 'warning' : 'neutral'
+                          } size="sm">
+                            {getTypeText(request.type)}
+                          </Badge>
+                          <Badge variant={
+                            request.priority === 'urgent' ? 'error' :
+                            request.priority === 'high' ? 'warning' :
+                            request.priority === 'normal' ? 'info' : 'neutral'
+                          } size="sm">
+                            {getPriorityText(request.priority)}
+                          </Badge>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div>
+                          <span className="font-medium">{request.requestedQuantity}</span>
+                          {request.approvedQuantity && request.approvedQuantity !== request.requestedQuantity && (
+                            <div className="text-xs text-orange-600">
+                              معتمد: {request.approvedQuantity}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {request.type === 'bulk' ? (
+                          <div>
+                            <div className="font-medium">
+                              {[request.targetGovernorate, request.targetCity, request.targetDistrict]
+                                .filter(Boolean).join(' - ')}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">طلب فردي/عائلي</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant={
+                          request.status === 'pending' ? 'warning' :
+                          request.status === 'approved' ? 'success' :
+                          request.status === 'rejected' ? 'error' : 'info'
+                        } size="sm">
+                          {getStatusText(request.status)}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(request.requestDate).toLocaleDateString('ar-SA')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2 space-x-reverse">
+                          <button 
+                            onClick={() => onReviewRequest(request)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              request.status === 'pending' 
+                                ? 'text-blue-600 hover:text-blue-900 hover:bg-blue-50' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                            title={request.status === 'pending' ? 'مراجعة الطلب' : 'عرض التفاصيل'}
+                          >
+                            {request.status === 'pending' ? <Edit className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center">
+                    <div className="text-gray-500">
+                      <ClipboardList className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg font-medium">
+                        {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' 
+                          ? 'لا توجد طلبات مطابقة للفلاتر' 
+                          : 'لا توجد طلبات توزيع'}
+                      </p>
+                      <p className="text-sm mt-2">
+                        {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
+                          ? 'جرب تعديل الفلاتر أو مصطلح البحث'
+                          : 'لم يتم إنشاء أي طلبات توزيع بعد'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Instructions */}
+      <Card className="bg-blue-50 border-blue-200">
+        <div className="flex items-start space-x-3 space-x-reverse">
+          <ClipboardList className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+          <div>
+            <h4 className="font-medium text-blue-800 mb-3">إرشادات مراجعة طلبات التوزيع</h4>
+            <ul className="text-sm text-blue-700 space-y-2">
+              <li className="flex items-start space-x-2 space-x-reverse">
+                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <span>راجع تفاصيل كل طلب بعناية قبل الموافقة أو الرفض</span>
+              </li>
+              <li className="flex items-start space-x-2 space-x-reverse">
+                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <span>يمكنك تعديل الكمية المعتمدة حسب المخزون المتاح</span>
+              </li>
+              <li className="flex items-start space-x-2 space-x-reverse">
+                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <span>اختر المندوب المناسب بناءً على المنطقة والحمولة</span>
+              </li>
+              <li className="flex items-start space-x-2 space-x-reverse">
+                <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <span>الطلبات العاجلة تحتاج أولوية في المراجعة</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

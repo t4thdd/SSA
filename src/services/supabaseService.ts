@@ -11,6 +11,9 @@ import {
   mockRoles,
   mockSystemUsers,
   mockPermissions,
+  mockDistributionRequests,
+  getPendingDistributionRequests,
+  getDistributionRequestById,
   calculateStats,
   type Beneficiary,
   type Organization,
@@ -23,7 +26,8 @@ import {
   type PackageTemplate,
   type Role,
   type SystemUser,
-  type Permission
+  type Permission,
+  type DistributionRequest
 } from '../data/mockData';
 import * as Sentry from '@sentry/react';
 
@@ -329,6 +333,103 @@ export const permissionsService = {
   async getAll(): Promise<Permission[]> {
     await simulateNetworkDelay();
     return [...mockPermissions];
+  }
+};
+
+export const distributionRequestsService = {
+  async getAll(): Promise<DistributionRequest[]> {
+    await simulateNetworkDelay();
+    return [...mockDistributionRequests];
+  },
+
+  async getPending(): Promise<DistributionRequest[]> {
+    await simulateNetworkDelay();
+    return getPendingDistributionRequests();
+  },
+
+  async getById(id: string): Promise<DistributionRequest | null> {
+    await simulateNetworkDelay();
+    return getDistributionRequestById(id);
+  },
+
+  async getByRequester(requesterId: string): Promise<DistributionRequest[]> {
+    await simulateNetworkDelay();
+    return mockDistributionRequests.filter(r => r.requesterId === requesterId);
+  },
+
+  async create(requestData: any): Promise<DistributionRequest> {
+    await simulateNetworkDelay();
+    
+    Sentry.addBreadcrumb({
+      message: 'Creating new distribution request',
+      category: 'distribution',
+      data: { 
+        requesterName: requestData.requesterName, 
+        type: requestData.type,
+        quantity: requestData.requestedQuantity 
+      }
+    });
+    
+    const newRequest: DistributionRequest = {
+      id: `req-${Date.now()}`,
+      requesterId: requestData.requesterId,
+      requesterType: requestData.requesterType,
+      requesterName: requestData.requesterName,
+      requestDate: new Date().toISOString(),
+      status: 'pending',
+      type: requestData.type,
+      packageTemplateId: requestData.packageTemplateId,
+      requestedQuantity: requestData.requestedQuantity,
+      targetGovernorate: requestData.targetGovernorate,
+      targetCity: requestData.targetCity,
+      targetDistrict: requestData.targetDistrict,
+      beneficiaryIds: requestData.beneficiaryIds,
+      notes: requestData.notes,
+      priority: requestData.priority || 'normal',
+      estimatedCost: requestData.estimatedCost,
+      estimatedDeliveryTime: requestData.estimatedDeliveryTime
+    };
+    
+    mockDistributionRequests.unshift(newRequest);
+    return newRequest;
+  },
+
+  async approve(id: string, approvedQuantity: number, courierId: string, adminNotes?: string): Promise<DistributionRequest> {
+    await simulateNetworkDelay();
+    const index = mockDistributionRequests.findIndex(r => r.id === id);
+    if (index === -1) {
+      throw new Error('طلب التوزيع غير موجود');
+    }
+    
+    mockDistributionRequests[index] = {
+      ...mockDistributionRequests[index],
+      status: 'approved',
+      approvedQuantity,
+      assignedCourierId: courierId,
+      adminNotes,
+      approvedBy: 'admin',
+      approvalDate: new Date().toISOString()
+    };
+    
+    return mockDistributionRequests[index];
+  },
+
+  async reject(id: string, rejectionReason: string): Promise<DistributionRequest> {
+    await simulateNetworkDelay();
+    const index = mockDistributionRequests.findIndex(r => r.id === id);
+    if (index === -1) {
+      throw new Error('طلب التوزيع غير موجود');
+    }
+    
+    mockDistributionRequests[index] = {
+      ...mockDistributionRequests[index],
+      status: 'rejected',
+      rejectionReason,
+      approvedBy: 'admin',
+      approvalDate: new Date().toISOString()
+    };
+    
+    return mockDistributionRequests[index];
   }
 };
 

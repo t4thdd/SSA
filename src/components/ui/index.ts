@@ -10,6 +10,7 @@ export { ConfirmationModal } from './ConfirmationModal';
 export { NotificationToast } from './NotificationToast';
 export { LoadingSpinner } from './LoadingSpinner';
 export { FormField } from './FormField';
+export { AreaSelector } from './AreaSelector';
 
 // أنواع TypeScript
 export type { ButtonProps } from './Button';
