@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Search, Filter, Plus, Eye, Edit, Phone, Mail, CheckCircle, Clock, AlertTriangle, Users, Package, Star, TrendingUp, Download, MapPin, Calendar, RefreshCw } from 'lucide-react';
+import { Building2, Search, Filter, Plus, Eye, Edit, Phone, Mail, CheckCircle, Clock, AlertTriangle, Users, Package, Star, TrendingUp, Download, MapPin, Calendar, RefreshCw, BarChart3 } from 'lucide-react';
 import { mockOrganizations, type Organization } from '../../data/mockData';
 import { useErrorLogger } from '../../utils/errorLogger'; // Assuming errorLogger.ts is correctly imported
 import { Button, Card, Input, Badge, Modal, ExportModal } from '../ui';
