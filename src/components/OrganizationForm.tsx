@@ -163,7 +163,6 @@ export default function OrganizationForm({ organization, onSave, onCancel, mode 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
       setOperationError(errorMessage);
-      Sentry.captureException(error instanceof Error ? error : new Error(errorMessage));
       logError(new Error(errorMessage), 'OrganizationForm');
     } finally {
       setIsSubmitting(false);

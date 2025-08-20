@@ -17,7 +17,6 @@ import {
 } from '../../data/mockData';
 import { useErrorLogger } from '../../utils/errorLogger';
 import { Button, Card, Input, Badge, Modal } from '../ui';
-import * as Sentry from '@sentry/react';
 
 export default function TasksManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -187,7 +186,6 @@ export default function TasksManagementPage() {
       setSelectedTask(null);
       logInfo(`تم تعيين مندوب للمهمة: ${selectedTask.id}`, 'TasksManagementPage');
     } catch (error) {
-      Sentry.captureException(error);
       logError(error as Error, 'TasksManagementPage');
       setNotification({ message: 'حدث خطأ في تعيين المندوب', type: 'error' });
       setTimeout(() => setNotification(null), 3000);

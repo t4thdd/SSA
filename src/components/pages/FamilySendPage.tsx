@@ -13,7 +13,6 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useErrorLogger } from '../../utils/errorLogger';
 import { Button, Card, Input, Badge, Modal } from '../ui';
-import * as Sentry from '@sentry/react';
 
 interface FamilySendPageProps {
   onNavigateBack?: () => void;
@@ -115,19 +114,8 @@ export default function FamilySendPage({ onNavigateBack }: FamilySendPageProps) 
       setRequestResult(results);
       setShowSuccessModal(true);
       
-      Sentry.addBreadcrumb({
-        message: 'Family distribution request created',
-        category: 'distribution',
-        data: { 
-          requestId: newRequest.id, 
-          familyId: familyId,
-          membersCount: selectedBeneficiaries.length
-        }
-      });
-      
       logInfo(`تم إنشاء طلب توزيع عائلي: ${newRequest.id}`, 'FamilySendPage');
     } catch (error) {
-      Sentry.captureException(error);
       setErrorDetails('حدث خطأ تقني في النظام. يرجى المحاولة مرة أخرى.');
       setShowErrorModal(true);
       logError(error as Error, 'FamilySendPage');

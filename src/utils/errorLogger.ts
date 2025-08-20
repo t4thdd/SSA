@@ -34,13 +34,6 @@ class ErrorLogger {
     };
 
     // إرسال الخطأ إلى Sentry
-    Sentry.withScope((scope) => {
-      scope.setTag('component', component || 'unknown');
-      scope.setLevel('error');
-      scope.setContext('additionalInfo', additionalInfo || {});
-      Sentry.captureException(error);
-    });
-
     this.errors.unshift(errorLog);
     
     // الاحتفاظ بآخر 100 خطأ فقط
@@ -108,15 +101,6 @@ class ErrorLogger {
     };
 
     // إرسال المعلومات إلى Sentry (في بيئة التطوير فقط)
-    if (process.env.NODE_ENV === 'development') {
-      Sentry.withScope((scope) => {
-        scope.setTag('component', component || 'unknown');
-        scope.setLevel('info');
-        scope.setContext('additionalInfo', additionalInfo || {});
-        Sentry.captureMessage(message, 'info');
-      });
-    }
-
     this.errors.unshift(infoLog);
     
     if (this.errors.length > this.maxErrors) {

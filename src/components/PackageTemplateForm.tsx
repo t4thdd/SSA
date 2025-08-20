@@ -4,7 +4,6 @@ import { type PackageTemplate, type PackageItem, mockOrganizations } from '../da
 import { useErrorLogger } from '../utils/errorLogger';
 import { Button, Card, Input, FormField, ConfirmationModal } from './ui';
 import { useFormValidation } from '../hooks/useFormValidation';
-import * as Sentry from '@sentry/react';
 
 interface PackageTemplateFormProps {
   template?: PackageTemplate | null;
@@ -216,7 +215,6 @@ export default function PackageTemplateForm({ template, onSave, onCancel, isCopy
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
       setOperationError(errorMessage);
-      Sentry.captureException(error instanceof Error ? error : new Error(errorMessage));
       logError(new Error(errorMessage), 'PackageTemplateForm');
     } finally {
       setIsSubmitting(false);

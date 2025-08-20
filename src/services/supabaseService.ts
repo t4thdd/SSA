@@ -29,7 +29,6 @@ import {
   type Permission,
   type DistributionRequest
 } from '../data/mockData';
-import * as Sentry from '@sentry/react';
 
 const simulateNetworkDelay = (ms: number = 500) => 
   new Promise(resolve => setTimeout(resolve, ms));
@@ -71,12 +70,6 @@ export const beneficiariesService = {
 
   async create(beneficiary: any): Promise<Beneficiary> {
     await simulateNetworkDelay();
-    
-    Sentry.addBreadcrumb({
-      message: 'Creating new beneficiary',
-      category: 'beneficiary',
-      data: { name: beneficiary.name, nationalId: beneficiary.nationalId }
-    });
     
     const newBeneficiary: Beneficiary = {
       id: `new-${Date.now()}`,
@@ -359,16 +352,6 @@ export const distributionRequestsService = {
 
   async create(requestData: any): Promise<DistributionRequest> {
     await simulateNetworkDelay();
-    
-    Sentry.addBreadcrumb({
-      message: 'Creating new distribution request',
-      category: 'distribution',
-      data: { 
-        requesterName: requestData.requesterName, 
-        type: requestData.type,
-        quantity: requestData.requestedQuantity 
-      }
-    });
     
     const newRequest: DistributionRequest = {
       id: `req-${Date.now()}`,

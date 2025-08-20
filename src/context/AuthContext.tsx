@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { type SystemUser } from '../data/mockData';
-import * as Sentry from '@sentry/react';
 
 interface AuthContextType {
   loggedInUser: SystemUser | null;
@@ -33,31 +32,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       lastLogin: new Date().toISOString()
     };
     
-    // تعيين معلومات المستخدم في Sentry
-    Sentry.setUser({
-      id: updatedUser.id,
-      username: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.roleId
-    });
-    
-    Sentry.addBreadcrumb({
-      message: 'User logged in',
-      category: 'auth',
-      data: { userId: updatedUser.id, userName: updatedUser.name }
-    });
-    
     setLoggedInUser(updatedUser);
   };
 
   const logout = () => {
-    Sentry.addBreadcrumb({
-      message: 'User logged out',
-      category: 'auth',
-      data: { userId: loggedInUser?.id }
-    });
-    
-    Sentry.setUser(null);
     setLoggedInUser(null);
   };
 

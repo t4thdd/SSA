@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { type Beneficiary, mockBeneficiaries } from '../data/mockData';
 import { useErrorLogger } from '../utils/errorLogger';
-import * as Sentry from '@sentry/react';
 
 interface UseBeneficiariesOptions {
   organizationId?: string;
@@ -44,7 +43,6 @@ export const useBeneficiaries = (options: UseBeneficiariesOptions = {}) => {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'خطأ في تحميل المستفيدين';
         setError(errorMessage);
-        Sentry.captureException(err instanceof Error ? err : new Error(errorMessage));
         logError(new Error(errorMessage), 'useBeneficiaries');
       } finally {
         setLoading(false);
@@ -143,7 +141,6 @@ export const useBeneficiaries = (options: UseBeneficiariesOptions = {}) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'خطأ في إضافة المستفيد';
       setError(errorMessage);
-      Sentry.captureException(err instanceof Error ? err : new Error(errorMessage));
       logError(new Error(errorMessage), 'useBeneficiaries');
       throw err;
     } finally {

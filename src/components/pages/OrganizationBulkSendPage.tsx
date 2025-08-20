@@ -138,20 +138,8 @@ export default function OrganizationBulkSendPage({ onNavigateBack }: Organizatio
       setRequestResult(results);
       setShowSuccessModal(true);
       
-      Sentry.addBreadcrumb({
-        message: 'Organization bulk distribution request created',
-        category: 'distribution',
-        data: { 
-          requestId: newRequest.id, 
-          organizationId: loggedInUser?.associatedId,
-          quantity: requestedQuantity,
-          area: getSelectedAreaText()
-        }
-      });
-      
       logInfo(`تم إنشاء طلب توزيع جماعي: ${newRequest.id}`, 'OrganizationBulkSendPage');
     } catch (error) {
-      Sentry.captureException(error);
       setErrorDetails('حدث خطأ تقني في النظام. يرجى المحاولة مرة أخرى.');
       setShowErrorModal(true);
       logError(error as Error, 'OrganizationBulkSendPage');

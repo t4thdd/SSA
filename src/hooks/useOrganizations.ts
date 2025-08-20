@@ -108,7 +108,6 @@ export const useOrganizations = (options: UseOrganizationsOptions = {}) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'خطأ في إضافة المؤسسة';
       setError(errorMessage);
-      Sentry.captureException(err instanceof Error ? err : new Error(errorMessage));
       logError(new Error(errorMessage), 'useOrganizations');
       throw err;
     } finally {

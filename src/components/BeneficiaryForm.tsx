@@ -277,7 +277,6 @@ export default function BeneficiaryForm({ beneficiary, onSave, onCancel, mode = 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
       setOperationError(errorMessage);
-      Sentry.captureException(error instanceof Error ? error : new Error(errorMessage));
       logError(new Error(errorMessage), 'BeneficiaryForm');
     } finally {
       setIsSubmitting(false);

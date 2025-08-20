@@ -1,7 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Bug, Copy, CheckCircle } from 'lucide-react';
 import { errorLogger } from '../utils/errorLogger';
-import * as Sentry from '@sentry/react';
 
 interface Props {
   children: ReactNode;
@@ -28,17 +27,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
-    
-    // إرسال الخطأ إلى Sentry مع معلومات إضافية
-    Sentry.withScope((scope) => {
-      scope.setTag('errorBoundary', true);
-      scope.setTag('component', this.props.componentName || 'ErrorBoundary');
-      scope.setContext('errorInfo', {
-        componentStack: errorInfo.componentStack
-      });
-      scope.setLevel('error');
-      Sentry.captureException(error);
-    });
     
     // تسجيل الخطأ
     errorLogger.logError(error, this.props.componentName || 'ErrorBoundary', {

@@ -13,7 +13,6 @@ import {
 import { useErrorLogger } from '../../utils/errorLogger'; // Assuming errorLogger.ts is correctly imported
 import { Button, Card, Input, Badge, Modal } from '../ui';
 import { useAuth } from '../../context/AuthContext';
-import * as Sentry from '@sentry/react';
 
 interface IndividualSendPageProps {
   beneficiaryIdToPreselect?: string | null;
@@ -145,19 +144,8 @@ export default function IndividualSendPage({ beneficiaryIdToPreselect, onBenefic
       setRequestResults(results);
       setShowSuccessModal(true);
       
-      Sentry.addBreadcrumb({
-        message: 'Individual distribution request created',
-        category: 'distribution',
-        data: { 
-          requestId: newRequest.id, 
-          beneficiaryId: selectedBeneficiary!.id,
-          templateId: selectedTemplate
-        }
-      });
-      
       logInfo(`تم إنشاء طلب توزيع فردي: ${newRequest.id}`, 'IndividualSendPage');
     } catch (error) {
-      Sentry.captureException(error);
       setErrorDetails('حدث خطأ تقني في إنشاء طلب التوزيع. يرجى المحاولة مرة أخرى.');
       setShowErrorModal(true);
       logError(error as Error, 'IndividualSendPage');

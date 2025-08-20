@@ -90,16 +90,6 @@ export default function DistributionRequestReview({
 
       onApprove(request.id, approvedQuantity, selectedCourierId, adminNotes);
       
-      Sentry.addBreadcrumb({
-        message: 'Distribution request approved',
-        category: 'distribution',
-        data: { 
-          requestId: request.id, 
-          approvedQuantity, 
-          courierId: selectedCourierId 
-        }
-      });
-
       logInfo(`تمت الموافقة على طلب التوزيع: ${request.id}`, 'DistributionRequestReview');
     } catch (error) {
       Sentry.captureException(error);
