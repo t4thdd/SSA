@@ -103,6 +103,31 @@ export default function CouriersManagementPage() {
     );
   };
 
+  const getCourierTrackingPoints = (courier: Courier): MapPoint[] => {
+    const points: MapPoint[] = [];
+    
+    // إضافة موقع المندوب
+    if (courier.currentLocation) {
+      points.push({
+        id: `courier-${courier.id}`,
+        lat: courier.currentLocation.lat,
+        lng: courier.currentLocation.lng,
+        status: courier.status === 'active' ? 'delivered' : 
+                courier.status === 'busy' ? 'rescheduled' : 'problem',
+        title: `المندوب: ${courier.name}`,
+        description: `الحالة: ${courier.status === 'active' ? 'نشط' : 
+                     courier.status === 'busy' ? 'مشغول' : 'غير متصل'}`,
+        data: courier
+      });
+    }
+    
+    return points;
+  };
+
+  const handleMapPointClick = (data: any) => {
+    console.log('Map point clicked:', data);
+  };
+
   const handleAddCourier = () => {
     setModalType('add');
     setSelectedCourier(null);
@@ -140,7 +165,7 @@ export default function CouriersManagementPage() {
     const courierTasks = tasks.filter(t => t.courierId === courier.id);
     const taskBeneficiaries = courierTasks.map(task => 
       beneficiaries.find(b => b.id === task.beneficiaryId)
-    ).filter(Boolean) as Beneficiary[];
+    ).filter(Boolean) as any[];
 
     // إنشاء نقاط الخريطة
     const mapPoints: MapPoint[] = [];
@@ -306,77 +331,6 @@ export default function CouriersManagementPage() {
     if (confirm(`هل تريد الاتصال بالرقم ${phone}؟`)) {
       window.open(`tel:${phone}`);
     }
-  };
-
-  // تحويل بيانات المندوب إلى نقاط خريطة للتتبع
-  const getCourierTrackingPoints = (courier: Courier): MapPoint[] => {
-    const points: MapPoint[] = [];
-    
-    // إضافة موقع المندوب الحالي
-    if (courier.currentLocation) {
-      points.push({
-        id: `courier-${courier.id}`,
-        lat: courier.currentLocation.lat,
-        lng: courier.currentLocation.lng,
-        status: courier.status === 'active' ? 'delivered' : 
-                courier.status === 'busy' ? 'pending' : 'problem',
-        title: `المندوب: ${courier.name}`,
-        description: `الحالة: ${courier.status === 'active' ? 'نشط' : 
-                     courier.status === 'busy' ? 'مشغول' : 'غير متصل'} - التقييم: ${courier.rating}⭐`,
-        data: {
-          id: courier.id,
-          name: courier.name,
-          phone: courier.phone,
-          detailedAddress: { district: 'موقع المندوب' }
-        } as any
-      });
-    }
-    
-    // إضافة مواقع المهام المرتبطة بالمندوب
-    const courierTasks = mockTasks.filter(task => task.courierId === courier.id);
-    courierTasks.forEach(task => {
-      const beneficiary = mockBeneficiaries.find(b => b.id === task.beneficiaryId);
-      if (beneficiary && beneficiary.location) {
-        points.push({
-          id: task.id,
-          lat: beneficiary.location.lat,
-          lng: beneficiary.location.lng,
-          status: task.status === 'delivered' ? 'delivered' :
-                  task.status === 'failed' ? 'problem' :
-                  task.status === 'rescheduled' ? 'rescheduled' : 'pending',
-          title: beneficiary.name,
-          description: `المهمة: ${task.status === 'delivered' ? 'تم التسليم' : 
-                       task.status === 'failed' ? 'فشل' :
-                       task.status === 'rescheduled' ? 'معاد جدولته' : 'في الانتظار'}`,
-          data: beneficiary
-        });
-      }
-    });
-    
-    return points;
-  };
-
-  // الحصول على المهام القريبة من المندوب (في نطاق 5 كم)
-  const getCourierNearbyTasks = (courier: Courier): Task[] => {
-    if (!courier.currentLocation) return [];
-    
-    return mockTasks.filter(task => {
-      const beneficiary = mockBeneficiaries.find(b => b.id === task.beneficiaryId);
-      if (!beneficiary || !beneficiary.location) return false;
-      
-      // حساب المسافة التقريبية (محاكاة)
-      const distance = Math.sqrt(
-        Math.pow(beneficiary.location.lat - courier.currentLocation!.lat, 2) +
-        Math.pow(beneficiary.location.lng - courier.currentLocation!.lng, 2)
-      ) * 111; // تحويل تقريبي إلى كيلومتر
-      
-      return distance <= 5; // في نطاق 5 كم
-    });
-  };
-
-  const handleMapPointClick = (beneficiary: Beneficiary) => {
-    // يمكن إضافة منطق إضافي هنا لعرض تفاصيل المستفيد أو المهمة
-    console.log('تم النقر على:', beneficiary.name);
   };
 
   const handleEmail = (email: string) => {
@@ -1066,11 +1020,11 @@ export default function CouriersManagementPage() {
                       <>
                         <div>
                           <span className="text-blue-700">خط العرض:</span>
-                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lat.toFixed(6)}</span>
+                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lat.toFixed(4)}</span>
                         </div>
                         <div>
                           <span className="text-blue-700">خط الطول:</span>
-                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lng.toFixed(6)}</span>
+                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lng.toFixed(4)}</span>
                         </div>
                       </>
                     )}
@@ -1085,17 +1039,15 @@ export default function CouriersManagementPage() {
                       الموقع الحالي والمهام المرتبطة ({trackingData.mapPoints.length} نقطة)
                     </p>
                   </div>
-                  <GazaMap 
-                    points={trackingData.mapPoints}
-                    onPointClick={(data) => {
-                      if (data.id !== selectedCourier.id) {
-                        // إذا تم النقر على مستفيد، عرض تفاصيله
-                        alert(`المستفيد: ${data.name}\nالهاتف: ${data.phone}\nالعنوان: ${data.address}`);
-                      }
-                    }}
-                    activeFilter="all"
-                    className="h-80"
-                  />
+                  <div className="h-[400px] w-full bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+                    <GazaMap 
+                      points={getCourierTrackingPoints(selectedCourier)}
+                      onPointClick={handleMapPointClick}
+                      activeFilter="all"
+                      heightClass="h-full"
+                      className="w-full"
+                    />
+                  </div>
                 </div>
 
                 {/* Nearby Tasks */}
@@ -1425,4 +1377,9 @@ export default function CouriersManagementPage() {
       </Card>
     </div>
   );
+}
+
+// ExportModal component placeholder
+function ExportModal({ isOpen, onClose, data, title, defaultFilename, availableFields, filters }: any) {
+  return null; // Placeholder implementation
 }
