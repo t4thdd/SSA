@@ -3,6 +3,13 @@ import { BarChart3, Download, Calendar, Filter, TrendingUp, Users, Package, Chec
 import { mockTasks, mockBeneficiaries, mockPackages, mockCouriers, calculateStats } from '../../data/mockData';
 import GazaMap, { type MapPoint } from '../GazaMap';
 
+// Add Card component
+const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`bg-white rounded-2xl shadow-lg p-6 border border-gray-100 ${className}`}>
+    {children}
+  </div>
+);
+
 export default function DistributionReportsPage() {
   const [dateRange, setDateRange] = useState('month');
   const [reportType, setReportType] = useState('overview');
@@ -260,11 +267,13 @@ export default function DistributionReportsPage() {
             </div>
             
             <div className="h-[380px] w-full bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
-              points={convertDistributionToMapPoints()}
-              onPointClick={handleMapPointClick}
-              activeFilter={selectedRegion === 'all' ? 'all' : 'delivered'}
-              className="h-80 rounded-lg"
-            />
+              <GazaMap
+                points={convertDistributionToMapPoints()}
+                onPointClick={handleMapPointClick}
+                activeFilter={selectedRegion === 'all' ? 'all' : 'delivered'}
+                className="h-80 rounded-lg"
+              />
+            </div>
             
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600">
