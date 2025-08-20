@@ -994,12 +994,14 @@ export default function CouriersManagementPage() {
                     {selectedCourier.currentLocation && (
                       <>
                         <div>
-                          <span className="text-blue-700">خط العرض:</span>
-                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lat.toFixed(6)}</span>
-                        </div>
-                        <div>
-                          <span className="text-blue-700">خط الطول:</span>
-                          <span className="font-medium text-blue-900 mr-2">{selectedCourier.currentLocation.lng.toFixed(6)}</span>
+                <div className="h-[400px] w-full bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+                  <GazaMap 
+                    points={getCourierTrackingPoints(selectedCourier)}
+                    onPointClick={handleMapPointClick}
+                    activeFilter="all"
+                    heightClass="h-full"
+                    className="w-full"
+                  />
                         </div>
                       </>
                     )}

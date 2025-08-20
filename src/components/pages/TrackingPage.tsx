@@ -669,7 +669,7 @@ export default function TrackingPage() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">الحالة الحالية:</span>
+          <Card className="overflow-hidden">
                   <Badge variant={
                     selectedTask.status === 'delivered' ? 'success' :
                     selectedTask.status === 'failed' ? 'error' :
@@ -779,12 +779,15 @@ export default function TrackingPage() {
             const packageInfo = packages.find(p => p.id === task.packageId);
             const courier = task.courierId ? couriers.find(c => c.id === task.courierId) : null;
             
-            return {
-              id: task.id,
-              beneficiaryName: beneficiary?.name || 'غير محدد',
-              beneficiaryPhone: beneficiary?.phone || 'غير محدد',
-              beneficiaryArea: beneficiary?.detailedAddress?.district || 'غير محدد',
-              packageName: packageInfo?.name || 'غير محدد',
+            <div className="h-[400px] w-full bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+              <GazaMap 
+                points={mapPoints}
+                onPointClick={handleMapPointClick}
+                activeFilter={mapFilter}
+                heightClass="h-full"
+                className="w-full"
+              />
+            </div>
               packageType: packageInfo?.type || 'غير محدد',
               courierName: courier?.name || 'غير معين',
               courierPhone: courier?.phone || 'غير محدد',

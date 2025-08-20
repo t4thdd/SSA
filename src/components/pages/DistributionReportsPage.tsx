@@ -250,7 +250,7 @@ export default function DistributionReportsPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Geographic Distribution Map */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 overflow-hidden">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 flex items-center">
                 <MapPin className="w-6 h-6 ml-2 text-green-600" />
@@ -259,12 +259,15 @@ export default function DistributionReportsPage() {
               <div className="text-sm text-gray-600">خريطة تفاعلية</div>
             </div>
             
-            <GazaMap 
-              points={convertDistributionToMapPoints()}
-              onPointClick={handleMapPointClick}
-              activeFilter={selectedRegion === 'all' ? 'all' : 'delivered'}
-              className="h-80 rounded-lg"
-            />
+            <div className="h-[350px] w-full bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+              <GazaMap 
+                points={convertDistributionToMapPoints()}
+                onPointClick={handleMapPointClick}
+                activeFilter={selectedRegion === 'all' ? 'all' : 'delivered'}
+                heightClass="h-full"
+                className="w-full"
+              />
+            </div>
             
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-600">

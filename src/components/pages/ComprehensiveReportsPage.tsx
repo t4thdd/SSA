@@ -377,7 +377,7 @@ export default function ComprehensiveReportsPage() {
       {/* Main Report Content */}
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Interactive Geographic Map */}
-        <Card>
+        <Card className="overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center">
               <Globe className="w-6 h-6 ml-2 text-blue-600" />
@@ -388,12 +388,15 @@ export default function ComprehensiveReportsPage() {
             </div>
           </div>
           
-          <GazaMap 
-            points={getMapPointsForReport()}
-            onPointClick={handleMapPointClick}
-            activeFilter="all"
-            className="h-96 rounded-lg"
-          />
+          <div className="h-[450px] w-full bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+            <GazaMap 
+              points={getMapPointsForReport()}
+              onPointClick={handleMapPointClick}
+              activeFilter="all"
+              heightClass="h-full"
+              className="w-full"
+            />
+          </div>
           
           <div className="mt-4 bg-gray-50 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-2">إحصائيات الخريطة</h4>
