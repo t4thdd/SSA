@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Phone, MapPin, Calendar, Shield, Save, X, AlertTriangle, CheckCircle, Users, Briefcase, Heart, DollarSign, FileText, Home } from 'lucide-react';
 import { type Beneficiary } from '../data/mockData';
-import { useErrorLogger } from '../utils/errorLogger';
 import { Button, Card, Input, Badge, FormField, ConfirmationModal } from './ui';
 import { useFormValidation, commonValidationRules } from '../hooks/useFormValidation';
 import * as Sentry from '@sentry/react';

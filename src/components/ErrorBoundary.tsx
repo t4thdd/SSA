@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Bug, Copy, CheckCircle } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Bug, Copy, CheckCircle } from 'lucide-react'; 
 import { errorLogger } from '../utils/errorLogger';
 
 interface Props {

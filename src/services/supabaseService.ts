@@ -28,7 +28,7 @@ import {
   type SystemUser,
   type Permission,
   type DistributionRequest
-} from '../data/mockData';
+} from '../data/mockData'; 
 
 const simulateNetworkDelay = (ms: number = 500) => 
   new Promise(resolve => setTimeout(resolve, ms));

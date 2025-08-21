@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 
 // نظام تسجيل الأخطاء
 export interface ErrorLog {
@@ -64,14 +63,6 @@ class ErrorLogger {
       ...additionalInfo
     };
 
-    // إرسال التحذير إلى Sentry
-    Sentry.withScope((scope) => {
-      scope.setTag('component', component || 'unknown');
-      scope.setLevel('warning');
-      scope.setContext('additionalInfo', additionalInfo || {});
-      Sentry.captureMessage(message, 'warning');
-    });
-
     this.errors.unshift(warningLog);
     
     if (this.errors.length > this.maxErrors) {
@@ -98,8 +89,6 @@ class ErrorLogger {
       url: window.location.href,
       ...additionalInfo
     };
-
-    // إرسال المعلومات إلى Sentry (في بيئة التطوير فقط)
     this.errors.unshift(infoLog);
     
     if (this.errors.length > this.maxErrors) {

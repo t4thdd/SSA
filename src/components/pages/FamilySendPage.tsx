@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { Heart, Users, Package, Send, CheckCircle, AlertTriangle, Clock, FileText, Star, RefreshCw, X, Calendar, Shield, Activity, UserPlus, ArrowRight } from 'lucide-react';
 import { 
-  type DistributionRequest, 
-  type PackageTemplate,
-  type Beneficiary,
   mockPackageTemplates,
   mockBeneficiaries,
   mockDistributionRequests,
   mockFamilies,
+  type DistributionRequest,
   getBeneficiariesByFamily
 } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import { useErrorLogger } from '../../utils/errorLogger';
-import { Button, Card, Input, Badge, Modal } from '../ui';
+import { Button, Card, Input, Badge, Modal } from '../ui'; 
 
 interface FamilySendPageProps {
   onNavigateBack?: () => void;

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { type Organization, mockOrganizations } from '../data/mockData';
 import { useErrorLogger } from '../utils/errorLogger';
-import * as Sentry from '@sentry/react';
 
 interface UseOrganizationsOptions {
   searchTerm?: string;
@@ -30,7 +29,6 @@ export const useOrganizations = (options: UseOrganizationsOptions = {}) => {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'خطأ في تحميل المؤسسات';
         setError(errorMessage);
-        Sentry.captureException(err instanceof Error ? err : new Error(errorMessage));
         logError(new Error(errorMessage), 'useOrganizations');
       } finally {
         setLoading(false);

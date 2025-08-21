@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { User, Search, Send, Package, MapPin, Phone, CheckCircle, AlertTriangle, Clock, FileText, Star, RefreshCw, X, Calendar, Shield, Activity } from 'lucide-react';
 import { 
-  type Beneficiary, 
   mockBeneficiaries, 
   mockOrganizations, 
   mockPackageTemplates,
   mockDistributionRequests,
-  type Organization,
-  type PackageTemplate,
   type DistributionRequest
 } from '../../data/mockData';
 import { useErrorLogger } from '../../utils/errorLogger'; // Assuming errorLogger.ts is correctly imported

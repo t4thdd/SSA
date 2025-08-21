@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { type Beneficiary, mockBeneficiaries } from '../data/mockData';
 import { useErrorLogger } from '../utils/errorLogger';
-
 interface UseBeneficiariesOptions {
   organizationId?: string;
   familyId?: string;

@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import { Package, Building2, MapPin, Users, Send, CheckCircle, AlertTriangle, Clock, FileText, Star, RefreshCw, X, Calendar, Shield, Activity, Truck, ArrowRight } from 'lucide-react';
 import { 
-  type DistributionRequest, 
-  type PackageTemplate,
-  type Beneficiary,
   mockPackageTemplates,
   mockBeneficiaries,
   mockDistributionRequests,
-  getBeneficiariesByArea
+  getBeneficiariesByArea,
+  type DistributionRequest
 } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import { useErrorLogger } from '../../utils/errorLogger';
 import { Button, Card, Input, Badge, Modal, AreaSelector } from '../ui';
 import { useAreaSelector } from '../../hooks/useGeographicData';
-import * as Sentry from '@sentry/react';
 
 interface OrganizationBulkSendPageProps {
   onNavigateBack?: () => void;

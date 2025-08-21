@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Save, X, AlertTriangle, CheckCircle, MapPin, Phone, Mail, User, Activity } from 'lucide-react';
-import { type Organization } from '../data/mockData';
 import { useErrorLogger } from '../utils/errorLogger';
 import { Button, Card, Input, FormField, ConfirmationModal } from './ui';
 import { useFormValidation, commonValidationRules } from '../hooks/useFormValidation';

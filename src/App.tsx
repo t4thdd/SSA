@@ -8,7 +8,6 @@ import LandingPage from './components/LandingPage';
 import AdminDashboard from './components/AdminDashboard';
 import OrganizationsDashboard from './components/OrganizationsDashboard';
 import FamiliesDashboard from './components/FamiliesDashboard';
-
 type PageType = 'landing' | 'admin' | 'organizations' | 'families';
 
 function App() {
@@ -74,7 +73,6 @@ function AppContent({
   };
 
   const handleLogout = () => {
-    Sentry.setUser(null);
     logout();
     handleNavigateTo('landing');
     setActiveTab('overview');

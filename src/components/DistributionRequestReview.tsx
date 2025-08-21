@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Package, Users, MapPin, Calendar, Clock, Building2, Heart, User, Phone, FileText, Truck, Star, Edit, Save, X } from 'lucide-react';
 import { 
-  type DistributionRequest, 
-  type Beneficiary, 
-  type PackageTemplate, 
-  type Courier,
-  type Organization,
-  type Family,
   mockDistributionRequests,
   mockBeneficiaries,
   mockPackageTemplates,
   mockCouriers,
   mockOrganizations,
   mockFamilies,
+  type DistributionRequest,
   getCouriersByServiceArea,
   getBeneficiariesByArea,
   getTemplateById
 } from '../data/mockData';
 import { useErrorLogger } from '../utils/errorLogger';
 import { Button, Card, Input, Badge, ConfirmationModal } from './ui';
-import * as Sentry from '@sentry/react';
 
 interface DistributionRequestReviewProps {
   request: DistributionRequest;
@@ -115,15 +109,6 @@ export default function DistributionRequestReview({
       // محاكاة تأخير المعالجة
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      onReject(request.id, rejectionReason);
-      
-      Sentry.addBreadcrumb({
-        message: 'Distribution request rejected',
-        category: 'distribution',
-        data: { 
-          requestId: request.id, 
-          rejectionReason 
-        }
       });
 
       logInfo(`تم رفض طلب التوزيع: ${request.id}`, 'DistributionRequestReview');
