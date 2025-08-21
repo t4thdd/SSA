@@ -1414,6 +1414,18 @@ export const mockSystemUsers: SystemUser[] = [
   // مستخدمين إضافيين للمؤسسات المختلفة
   {
     id: uuidv4(),
+    name: 'سامي أحمد المراجع',
+    email: 'reviewer@humanitarian.ps',
+    phone: '0598765432',
+    roleId: roleReviewerId,
+    associatedId: null, // المراجع لا يرتبط بمؤسسة محددة
+    associatedType: null,
+    status: 'active',
+    lastLogin: '2024-12-21',
+    createdAt: '2024-01-12'
+  },
+  {
+    id: uuidv4(),
     name: 'د. فاطمة الغزاوي - أطباء بلا حدود',
     email: 'supervisor@msf-gaza.org',
     phone: '0559876543',

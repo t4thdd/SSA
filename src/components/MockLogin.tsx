@@ -37,6 +37,14 @@ export default function MockLogin({ onLogin }: MockLoginProps) {
       type: 'family',
       icon: Users,
       color: 'bg-orange-600'
+    },
+    {
+      email: 'reviewer@humanitarian.ps',
+      name: 'سامي أحمد المراجع',
+      role: 'مراجع الطلبات والهويات',
+      type: 'reviewer',
+      icon: Shield,
+      color: 'bg-purple-600'
     }
   ];
 
