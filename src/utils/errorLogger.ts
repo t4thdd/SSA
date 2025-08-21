@@ -1,4 +1,6 @@
 
+import { useCallback } from 'react';
+
 // نظام تسجيل الأخطاء
 export interface ErrorLog {
   id: string;
