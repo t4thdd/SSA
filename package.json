@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/react": "^10.5.0",
     "@supabase/supabase-js": "^2.55.0",
     "@types/uuid": "^10.0.0",
     "dotenv": "^17.2.1",
@@ -26,6 +27,7 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
@@ -36,4 +38,3 @@
     "typescript-eslint": "^8.3.0"
   }
 }
-
