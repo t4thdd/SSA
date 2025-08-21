@@ -3,7 +3,6 @@ import { User, Phone, MapPin, Calendar, Shield, Save, X, AlertTriangle, CheckCir
 import { type Beneficiary } from '../data/mockData';
 import { Button, Card, Input, Badge, FormField, ConfirmationModal } from './ui';
 import { useFormValidation, commonValidationRules } from '../hooks/useFormValidation';
-import * as Sentry from '@sentry/react';
 
 interface BeneficiaryFormProps {
   beneficiary?: Beneficiary | null;

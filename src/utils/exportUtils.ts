@@ -1,6 +1,5 @@
 import { jsPDF } from 'jspdf';
 import { useState } from 'react';
-import * as Sentry from '@sentry/react';
 
 // نظام التصدير المتقدم
 export interface ExportOptions {
