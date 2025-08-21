@@ -109,7 +109,7 @@ export default function DistributionRequestReview({
       // محاكاة تأخير المعالجة
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      });
+      onReject(request.id, rejectionReason);
 
       logInfo(`تم رفض طلب التوزيع: ${request.id}`, 'DistributionRequestReview');
     } catch (error) {
