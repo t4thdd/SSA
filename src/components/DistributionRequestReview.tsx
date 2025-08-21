@@ -87,8 +87,6 @@ export default function DistributionRequestReview({
       logInfo(`تمت الموافقة على طلب التوزيع: ${request.id}`, 'DistributionRequestReview');
     } catch (error) {
       logError(error as Error, 'DistributionRequestReview');
-    } catch (error) {
-      logError(error as Error, 'DistributionRequestReview');
     } finally {
       setIsProcessing(false);
     }
@@ -114,8 +112,6 @@ export default function DistributionRequestReview({
       onReject(request.id, rejectionReason);
 
       logInfo(`تم رفض طلب التوزيع: ${request.id}`, 'DistributionRequestReview');
-    } catch (error) {
-      logError(error as Error, 'DistributionRequestReview');
     } catch (error) {
       logError(error as Error, 'DistributionRequestReview');
     } finally {

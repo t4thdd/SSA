@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Database, Download, Upload, RefreshCw, Calendar, Clock, CheckCircle, AlertTriangle, Shield, HardDrive, Archive, Trash2, Eye, Settings, Activity, FileText, Save, X, Plus, Edit, Star, TrendingUp, BarChart3 } from 'lucide-react';
 import { useErrorLogger } from '../../utils/errorLogger'; // Assuming errorLogger.ts is correctly imported
 import { Button, Card, Input, Badge, Modal } from '../ui';
-import * as Sentry from '@sentry/react';
 
 interface BackupRecord {
   id: string;
