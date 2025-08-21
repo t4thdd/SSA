@@ -31,14 +31,6 @@ export default function MockLogin({ onLogin }: MockLoginProps) {
       color: 'bg-green-600'
     },
     {
-      email: 'supervisor@crs-gaza.org',
-      name: 'جون سميث - CRS',
-      role: 'مشرف المؤسسة',
-      type: 'organization',
-      icon: Building2,
-      color: 'bg-purple-600'
-    },
-    {
       email: 'family@abuamer.ps',
       name: 'محمد أبو عامر',
       role: 'مشرف العائلة',
